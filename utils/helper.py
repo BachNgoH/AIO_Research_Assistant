@@ -36,7 +36,7 @@ def parse_json(string):
     # Iterate over matches and append them to the list
     for match in matches:
         match = "{" + match.strip() + "}"
-        match = match.replace("': '", '": "').replace("', '", '", "').replace("'}]", '"}]').replace("{'", '{"')
+        match = match.replace("': '", '": "').replace("', '", '", "').replace("'}", '"}').replace("{'", '{"')
         print(match)
         
         json_objects.append(json.loads(match))
