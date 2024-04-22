@@ -21,7 +21,7 @@ For each citation, provide a brief summary in the format of JSON that includes:
 - The citation number (as presented in the text).
 - The category of the relationship (from the classifications provided above).
 - A short explanation of how the cited work contributes to the citing paper.
-The format of the output should be in the form: 
+The format of the output should be strictly in JSON format in the form: 
     
 {{
     "Citation": "[citation number]",
@@ -42,6 +42,7 @@ Example 2:
     "Explanation": "The cited work presents a comprehensive review of the literature on the topic, providing a strong theoretical foundation for the claims made in the citing paper."
 }}
 
+No explanation is needed
 ### Input
 {input}
 ### Response

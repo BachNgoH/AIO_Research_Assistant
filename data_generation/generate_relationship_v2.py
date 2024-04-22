@@ -10,7 +10,9 @@ from datasets import load_dataset
 from utils.helper import has_citation, parse_json
 from utils.prompts import DEFAULT_CITATION_INFER_PROMPT_TEMPLATE as prompt_template
 import random
-
+import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from tqdm import tqdm
 from dotenv import load_dotenv, dotenv_values
 random.seed(42)
 import argparse
@@ -47,10 +49,35 @@ def load_model(llm_service, model_name):
         llm = Groq(model=model_name, api_key=os.getenv("GROQ_API_KEY"))
     return llm
 
+def process_article(article, args, sentence_splitter, llm, prompt_template):
+    chunks = []
+    article['citation_data'] = []
+    for section in article['sections']:
+        if len(section['publication_ref']) > 0:
+            res = sentence_splitter.split_text(section['text'])
+            chunks += [c for c in res if has_citation(c)]
+
+    citation_data = []
+    if args.service == "vllm":
+        sampling_params = SamplingParams(temperature=0.0, max_tokens=4096)
+        completion = llm._client.generate([prompt_template.format(input=chunk) for chunk in chunks], sampling_params)
+        citation_data = [parse_json(c.outputs[0].text) for c in completion]
+    else:
+        for chunk in chunks:
+            try:
+                completion = llm.complete(prompt_template.format(input=chunk))
+                citation_data.append(parse_json(completion.text))
+            except Exception as e:
+                print(f'Error in chunk: {e}')
+    return {'article': article, 'citation_data': citation_data}
+
 def generate_relationships(args):
     sentence_splitter = SentenceSplitter.from_defaults(chunk_size=256, chunk_overlap=0)
     llm = load_model(args.service, args.model_name)
     generated_data = []
+
+    with open(f'{args.output_path}/generated_data.json', 'r') as f:
+        generated_data = json.load(f)
     all_articles = []
 
     if args.load_local:
@@ -60,49 +87,27 @@ def generate_relationships(args):
         all_articles = load_dataset(args.dataset_name)['train']
         all_articles = all_articles.to_list()
 
-    print("TOTAL len of all articles: ",  len(all_articles))
+    print("TOTAL len of all articles: ", len(all_articles))
 
-    for article in tqdm(all_articles[400:800], total=len(all_articles[400:800])):
-        chunks = []
-        article['citation_data'] = []
-        for section in article['sections']:
-            if len(section['publication_ref']) > 0:
-                res = sentence_splitter.split_text(section['text'])
-                # chunks += res
-                chunks += [c for c in res if has_citation(c)]
-        if args.service == "vllm":
-            sampling_params = SamplingParams(temperature=0.0, max_tokens=4096)
-            completion = llm._client.generate([prompt_template.format(input=chunk) for chunk in chunks], sampling_params)
-            citation_data = [parse_json(c.outputs[0].text) for c in completion]
-            generated_data += [{'Input': chunk, 'Output': output} for chunk, output in zip(chunks, citation_data)]
+    # Setup ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = []
+        for article in all_articles[400:800]:
+            # Submit tasks to the executor
+            futures.append(executor.submit(process_article, article, args, sentence_splitter, llm, prompt_template))
+
+        # Collect results
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            result = future.result()
+            article = result['article']
+            citation_data = result['citation_data']
             article['citation_data'] += citation_data
-        else:
-            for chunk in chunks:
-                try:
-                    completion = llm.complete(prompt_template.format(input=chunk))
-                    citation_data = parse_json(completion.text)
-                    generated_data.append({'Input': chunk, 'Output': citation_data})
+            generated_data.append({'Article': article, 'CitationData': citation_data})
 
-                    article['citation_data'] += citation_data
-                except Exception as e:
-                    print(f'Error in chunk: {e}')
-                    continue
-        # save generated_data
-        with open(f'{args.output_path}/generated_data.json', 'w') as f:
-            json.dump(generated_data, f)
+    # Save generated data
+    with open(f'{args.output_path}/generated_data.json', 'w') as f:
+        json.dump(generated_data, f)
 
-        # save new article data
-        with open(f'{args.output_path}/parsed_article_citation.json', 'w') as f:
-            json.dump(all_articles, f)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_name', type=str, default='BachNgoHParsedArxivPapers_12k')
-    parser.add_argument('--load_local', type=bool, default=False)
-    parser.add_argument('--service', type=str, default='hf')
-    parser.add_argument('--model_name', type=str, default='Gemma_7b_Citation_v2')
-    parser.add_argument('--output_path', type=str, default='../outputs')
-    args = parser.parse_args()
-    generate_relationships(args)
-            
+    # Save new article data
+    with open(f'{args.output_path}/parsed_article_citation.json', 'w') as f:
+        json.dump(all_articles, f)
