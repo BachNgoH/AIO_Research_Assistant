@@ -2,17 +2,20 @@ from llama_index.core.text_splitter import SentenceSplitter
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.huggingface import HuggingFaceLLM
 from llama_index.llms.groq import Groq
+from llama_index.llms.vllm import Vllm
+from vllm import SamplingParams
 from tqdm import tqdm
 import json
 from datasets import load_dataset
 from utils.helper import has_citation, parse_json
 from utils.prompts import DEFAULT_CITATION_INFER_PROMPT_TEMPLATE as prompt_template
-from unsloth import FastLanguageModel
 import random
+
 from dotenv import load_dotenv, dotenv_values
 random.seed(42)
 import argparse
 import os
+from vllm import SamplingParams
 load_dotenv()
 
 
@@ -21,6 +24,8 @@ def load_model(llm_service, model_name):
     if llm_service == "openai":
         llm = OpenAI(model=model_name, api_key=os.getenv("OPENAI_API_KEY"))
     elif llm_service == "hf":
+        from unsloth import FastLanguageModel
+
         max_seq_length = 8192 # Choose any! We auto support RoPE Scaling internally!
         dtype = None # None for auto detection. Float16 for Tesla T4, V100, Bfloat16 for Ampere+
         load_in_4bit = True # Use 4bit quantization to reduce memory usage. Can be False.
@@ -36,6 +41,8 @@ def load_model(llm_service, model_name):
         FastLanguageModel.for_inference(model) 
 
         llm = HuggingFaceLLM(model=model, tokenizer=tokenizer)
+    elif llm_service=="vllm":
+        llm = Vllm(model=model_name, temperature=0.8, tensor_parallel_size=2)
     elif llm_service == "groq":
         llm = Groq(model=model_name, api_key=os.getenv("GROQ_API_KEY"))
     return llm
@@ -63,17 +70,24 @@ def generate_relationships(args):
                 res = sentence_splitter.split_text(section['text'])
                 # chunks += res
                 chunks += [c for c in res if has_citation(c)]
-        for chunk in chunks:
-            try:
-                completion = llm.complete(prompt_template.format(input=chunk))
-                citation_data = parse_json(completion.text)
-                citation_data = completion.text
-                generated_data.append({'Input': chunk, 'Output': citation_data})
+        if args.service == "vllm":
+            sampling_params = SamplingParams(temperature=0.8, max_tokens=4096)
+            completion = llm._client.generate([prompt_template.format(input=chunk) for chunk in chunks], sampling_params)
+            citation_data = [parse_json(c.outputs[0].text) for c in completion]
+            generated_data += [{'Input': chunk, 'Output': output} for chunk, output in zip(chunks, citation_data)]
+            article['citation_data'] += citation_data
+        else:
+            for chunk in chunks:
+                try:
+                    completion = llm.complete(prompt_template.format(input=chunk))
+                    citation_data = parse_json(completion.text)
+                    citation_data = completion.text
+                    generated_data.append({'Input': chunk, 'Output': citation_data})
 
-                article['citation_data'] += citation_data
-            except Exception as e:
-                print(f'Error in chunk: {e}')
-                continue
+                    article['citation_data'] += citation_data
+                except Exception as e:
+                    print(f'Error in chunk: {e}')
+                    continue
         # save generated_data
         with open(f'{args.output_path}/generated_data.json', 'w') as f:
             json.dump(generated_data, f)

@@ -1,6 +1,6 @@
 python3 generate_data.py \
     --dataset_name="BachNgoH/ParsedArxivPapers_12k" \
     --load_local=True \
-    --service="groq" \
-    --model_name="llama3-8b-8192" \
+    --service="vllm" \
+    --model_name="meta-llama/Meta-Llama-3-8B-Instruct" \
     --output_path="./outputs" \
