@@ -1,7 +1,7 @@
 from collections import defaultdict
 import re
 import json
-
+import ast
 def has_citation(text):
   """Checks if a text string has citation marks.
 
@@ -36,10 +36,13 @@ def parse_json(string):
     # Iterate over matches and append them to the list
     for match in matches:
         match = "{" + match.strip() + "}"
-        match = match.replace("': '", '": "').replace("', '", '", "').replace("'}", '"}').replace("{'", '{"')
-        print(match)
-        
-        json_objects.append(json.loads(match))
+        try:
+            # match = ast.literal_eval(match)
+            match = match.replace("': '", '": "').replace("', '", '", "').replace("'}", '"}').replace("{'", '{"').replace("':", '":')        
+            json_objects.append(json.loads(match))
+        except Exception as e:
+            print(f"Error parsing JSON for chunk: {match}")
+            continue
 
     return json_objects
 

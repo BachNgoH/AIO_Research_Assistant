@@ -71,7 +71,7 @@ def generate_relationships(args):
                 # chunks += res
                 chunks += [c for c in res if has_citation(c)]
         if args.service == "vllm":
-            sampling_params = SamplingParams(temperature=0.8, max_tokens=4096)
+            sampling_params = SamplingParams(temperature=0.0, max_tokens=4096)
             completion = llm._client.generate([prompt_template.format(input=chunk) for chunk in chunks], sampling_params)
             citation_data = [parse_json(c.outputs[0].text) for c in completion]
             generated_data += [{'Input': chunk, 'Output': output} for chunk, output in zip(chunks, citation_data)]
