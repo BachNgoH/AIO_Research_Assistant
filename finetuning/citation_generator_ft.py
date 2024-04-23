@@ -1,14 +1,11 @@
-from unsloth import FastLanguageModel
-import torch
-import torch
-from torch.utils.data import Dataset
-from transformers import Trainer, BitsAndBytesConfig
-import json
-import random;random.seed(42)
-import copy
 from trl import SFTTrainer
 from transformers import TrainingArguments
 from datasets import Dataset as HFDataset
+from unsloth import FastLanguageModel
+import torch
+import json
+import argparse
+import random;random.seed(42)
 
 
 prompt = """You are about to analyze segments of academic texts where authors cite other papers. 
@@ -86,9 +83,12 @@ def train_citation_model(args):
 
     def train():
 
-        data_path = "../output/generated_data_v3.json"
+        data_path = args.data_path
         with open(data_path, 'r') as f:
             list_data_dict = json.load(f)
+        for sample in list_data_dict:
+            sample["Output"] = str(sample["Output"])
+
         citation_dataset = HFDataset.from_list(list_data_dict)
         citation_dataset = citation_dataset.map(formatting_prompts_func, batched = True,)
 
@@ -129,7 +129,15 @@ def train_citation_model(args):
 
         trainer.train()
 
-        model.save_pretrained("../output/Gemma_7b_Citation_v2") # Local saving
+        model.save_pretrained(args.output_path) # Local saving
 
     train()
 
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model_name', type=str, default='unsloth/gemma-1.1-7b-it-bnb-4bit')
+    parser.add_argument('--data_path', type=str, default='../outputs/generated_data.json')
+    parser.add_argument('--output_path', type=str, default='../outputs/Gemma_7b_Citation')
+    args = parser.parse_args()
+    train_citation_model(args)
