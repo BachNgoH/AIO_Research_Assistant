@@ -11,6 +11,20 @@
 <img src="./figures/RAG-overview.jpg" alt="pipeline" width=800/>
 
 
+### Training the citation annotate model
+
+```bash
+sh train_citation.sh
+
+```
+
+### Generate citation data
+
+```bash
+sh gen_data.sh
+```
+
+
 ## Citation Extraction Workflow
 
 <img src="./figures/Graph-Paper-Search.jpg" alt="citation" width=800/>
