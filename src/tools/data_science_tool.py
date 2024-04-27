@@ -7,7 +7,7 @@ import torch
 from llama_index.core.postprocessor import SentenceTransformerRerank
 
 
-def load_ds_tool():
+def load_ds_tool(llm):
     device_type = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
     embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5", cache_folder="../models", device=device_type) # must be the same as the previous stage
 
@@ -27,7 +27,7 @@ def load_ds_tool():
     # re-define our query engine
     data_science_query_engine = ds_index.as_query_engine(
         similarity_top_k=10,
-        llm=None,
+        llm=llm,
         node_postprocessors=[rerank_postprocessor],
     )
 

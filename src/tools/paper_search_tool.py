@@ -7,7 +7,7 @@ import torch
 
 
 
-def load_paper_search_tool():
+def load_paper_search_tool(llm):
     device_type = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
     embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5", cache_folder="../models", device=device_type) # must be the same as the previous stage
 
@@ -20,6 +20,7 @@ def load_paper_search_tool():
 
     paper_query_engine = paper_index.as_query_engine(
         similarity_top_k=5,
+        llm=llm
     )
 
     return paper_query_engine
