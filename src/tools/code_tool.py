@@ -1,5 +1,6 @@
 from llama_index.core.query_engine import CustomQueryEngine
 from llama_index.core import PromptTemplate
+from llama_index.llms.openai import OpenAI
 
 code_qa_prompt = PromptTemplate(
     "You are a code assistant powered by a large language model. "
@@ -13,7 +14,7 @@ code_qa_prompt = PromptTemplate(
 )
 
 class CodeQueryEngine(CustomQueryEngine):
-    llm: HuggingFaceLLM
+    llm: OpenAI
     qa_prompt: PromptTemplate
     def custom_query(self , query_str: str):
         response = self.llm.complete(
