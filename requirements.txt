@@ -6,3 +6,4 @@ llama-index-llms-ollama
 
 llama-index-embeddings-huggingface
 vllm==0.4.0
+fastapi
