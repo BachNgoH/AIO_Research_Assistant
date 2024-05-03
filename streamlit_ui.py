@@ -18,6 +18,9 @@ def run_app(username):
     st.sidebar.header("API Settings")
     api_key = st.sidebar.text_input("Enter Groq API Key", key="api_key", type="password")
     
+    # col1, col2 = st.columns([2, 1])
+    
+    # with col1: 
     st.title("💬 Chatbot")
     st.caption("🚀 I'm a Local Bot")    
     # Function to append and display a new message
@@ -71,6 +74,9 @@ def run_app(username):
         st.chat_message("assistant").write(answer)
         
         # Save the chat history to the database
+            
+    # with col2:
+    #     st.header("Don't know what to do yet!")
 
 if __name__ == "__main__":
     username = "bachngo"

@@ -4,8 +4,7 @@ import chromadb
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import StorageContext
 import torch
-
-
+from llama_index.core.tools import QueryEngineTool
 
 def load_paper_search_tool(llm):
     device_type = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
@@ -22,5 +21,10 @@ def load_paper_search_tool(llm):
         similarity_top_k=5,
         llm=llm
     )
+    
+    paper_search_tool = QueryEngineTool.from_defaults(
+        query_engine=paper_query_engine,
+        description="Useful for answering questions related to scientific papers"
+    )
 
-    return paper_query_engine
+    return paper_search_tool

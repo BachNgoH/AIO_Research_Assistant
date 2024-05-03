@@ -1,6 +1,7 @@
 from llama_index.core.query_engine import CustomQueryEngine
 from llama_index.core import PromptTemplate
 from llama_index.llms.openai import OpenAI
+from llama_index.core.tools import QueryEngineTool
 
 code_qa_prompt = PromptTemplate(
     "You are a code assistant powered by a large language model. "
@@ -25,8 +26,13 @@ class CodeQueryEngine(CustomQueryEngine):
         
 #         exe_result = executor.apply(program)
 #         response = response.text + f"\n\n**Execution Output**:```output\n\n{exe_result[0]}\n\n```\n"
-        return str(response)
+        return response.text
 
 def load_code_tool(llm):
     code_query_engine = CodeQueryEngine(llm = llm, qa_prompt=code_qa_prompt)
-    return code_query_engine
+    code_tool = QueryEngineTool(
+        query_engine=code_query_engine,
+        description="Useful for answering code-based questions"
+    )
+    
+    return code_tool

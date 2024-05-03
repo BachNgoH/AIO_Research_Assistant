@@ -1,13 +1,16 @@
 import os 
 from fastapi import FastAPI, Request
 from llama_index.llms.groq import Groq
+from dotenv import load_dotenv
+
+load_dotenv()
 app = FastAPI()
 
 @app.post("/complete")
 async def complete_text(request: Request):
     data = await request.json()
     message = data.get("message")
-    api_key = data.get("api_key")
+    api_key = os.getenv("GROQ_API_KEY")
 
     if not message:
         return {"error": "Please provide 'text' in the request body"}
