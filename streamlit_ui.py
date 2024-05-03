@@ -52,20 +52,20 @@ def run_app(username):
         
         answer = res.json()["completion"]
 
-        with st.chat_message("assistant"):
+        # with st.chat_message("assistant"):
             # Create a placeholder for streaming messages
-            message_placeholder = st.empty()
-            full_response = ""
+            # message_placeholder = st.empty()
+            # full_response = ""
 
-            for chunk in res.iter_content(
-                chunk_size=None, decode_unicode=True
-            ):
-                full_response += chunk
-                message_placeholder.markdown(full_response + "▌")
+            # for chunk in res.iter_content(
+            #     chunk_size=None, decode_unicode=True
+            # ):
+            #     full_response += chunk
+            #     message_placeholder.markdown(full_response + "▌")
 
-            message_placeholder.markdown(full_response)
+            # message_placeholder.markdown(full_response)
         st.session_state.messages.append(
-            {"role": "assistant", "content": full_response}
+            {"role": "assistant", "content": answer}
         )
 
         st.chat_message("assistant").write(answer)
