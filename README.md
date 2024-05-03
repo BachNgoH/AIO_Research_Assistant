@@ -18,8 +18,15 @@ sh train_citation.sh
 
 ```
 
-### Generate citation data
+### Generate data
 
+**Ingest paper data**
+```bash
+cd ./src
+python ingest.py
+```
+
+**Generate citation data with**
 ```bash
 sh gen_data.sh
 ```

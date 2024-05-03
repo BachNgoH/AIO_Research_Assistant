@@ -1,12 +1,59 @@
 import torch
 import chromadb
+import json
+import pandas as pd
 from llama_index.core import StorageContext, VectorStoreIndex
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.core import Document
+
 
 device_type = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+def load_data():
+    
+    cols = ['id', 'title', 'abstract', 'categories']
+    data = []
+    file_name = '../data/arxiv-metadata-oai-snapshot.json'
+
+
+    with open(file_name, encoding='latin-1') as f:
+        for line in f:
+            doc = json.loads(line)
+            lst = [doc['id'], doc['title'], doc['abstract'], doc['categories']]
+            data.append(lst)
+
+    df_data = pd.DataFrame(data=data, columns=cols)
+    
+    topics = ['cs.AI', 'cs.CV', 'cs.IR', 'cs.LG', 'cs.CL']
+
+    # Create a regular expression pattern that matches any of the topics
+    # The pattern will look like 'cs.AI|cs.CV|cs.IR|cs.LG|cs.CL'
+    pattern = '|'.join(topics)
+
+    # Filter the DataFrame to include rows where the 'categories' column contains any of the topics
+    # The na=False parameter makes sure that NaN values are treated as False
+    df_data = df_data[df_data['categories'].str.contains(pattern, na=False)].sample(5000)
+    
+    def clean_text(x):
+        
+        # Replace newline characters with a space
+        new_text = " ".join([c.strip() for c in x.replace("\n", "").split()])
+        # Remove leading and trailing spaces
+        new_text = new_text.strip()
+        
+        return new_text
+
+    df_data['title'] = df_data['title'].apply(clean_text)
+    df_data['abstract'] = df_data['abstract'].apply(clean_text)
+
+    df_data['prepared_text'] = df_data['title'] + '\n ' + df_data['abstract']
+    return df_data
+
 def ingest_paper():
+    
+    df_data = load_data()    
+    arxiv_documents = [Document(text=prepared_text, doc_id=id) for prepared_text,id in list(zip(df_data['prepared_text'], df_data['id']))]
     embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5", cache_folder="../models", device=device_type)
     chroma_client = chromadb.PersistentClient(path="../DB/arxiv")
     chroma_collection = chroma_client.get_or_create_collection("gemma_assistant_arxiv_papers")
@@ -18,3 +65,6 @@ def ingest_paper():
     index = VectorStoreIndex.from_documents(
         arxiv_documents, storage_context=storage_context, embed_model=embed_model, show_progress=True
     )
+    
+if __name__ == "__main__":
+    ingest_paper()
