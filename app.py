@@ -13,4 +13,5 @@ async def complete_text(request: Request):
         return {"error": "Please provide 'text' in the request body"}
     llm = Groq(model="llama3-70b-8192", api_key=api_key)
     completion = llm.complete(message)
-    return {"completion": str(completion)}
+    
+    return {"completion": completion.text}

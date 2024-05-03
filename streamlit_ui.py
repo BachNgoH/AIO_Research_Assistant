@@ -50,7 +50,7 @@ def run_app(username):
             
         res.raise_for_status()
         
-        answer = res
+        answer = res.json()["completion"]
 
         with st.chat_message("assistant"):
             # Create a placeholder for streaming messages
