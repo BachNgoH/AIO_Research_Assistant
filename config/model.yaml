@@ -1,0 +1,15 @@
+MODEL:  
+  TEMPERATURE: 0.2
+
+  USE_HISTORY: False
+  USE_RETRIEVER: True
+  USE_TRANSLATE: False
+  SERVICE: gemini # [ ollama, openai, groq, gemini ] 
+
+  MODEL_TYPE: "mistral" # ["llama", "mistral", "non_llama"],
+  
+  EMBEDDING_MODEL_NAME: "text-embedding-3-large" # "intfloat/multilingual-e5-large" #=> 51 #"Salesforce/SFR-Embedding-Mistral" =>58 # "intfloat/e5-mistral-7b-instruct" => 56.89
+  EMBEDDING_TYPE: "openai" # ["hf", "ollama", openai] # default hf
+
+  MODEL_ID: "gemini-1.5-pro-latest"
+
