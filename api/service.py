@@ -89,17 +89,6 @@ class AssistantService:
         else:
             raise NotImplementedError("The implementation for other types of LLMs are not ready yet!")
     
-    async def generate_response(self, streaming_response):
-        
-        for text in streaming_response.response_gen:
-            yield text
-            # tool_list = list(self.tools_dict.keys())
-            # for key, val in streaming_response.metadata.items():
-            #     if key == "selector_result":
-            #         tool_called = tool_list[val.selections[0].index - 1]
-            #     else:
-            #         sources.append(val["link"])
-            # yield f'{{"completion": {text}, "tool": {None}, "sources": {sources}}}'
     def predict(self, prompt):
         """
         Predicts the next sequence of text given a prompt using the loaded language model.
@@ -112,7 +101,7 @@ class AssistantService:
         """
         # Assuming query_engine is already created or accessible
         streaming_response = self.query_engine.query(prompt)
-        return StreamingResponse(self.generate_response(streaming_response), media_type="application/text")
+        return StreamingResponse(streaming_response.response_gen, media_type="application/text")
         
         
         
