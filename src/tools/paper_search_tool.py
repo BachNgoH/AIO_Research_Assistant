@@ -16,6 +16,7 @@ class LinkNodePostprocessor(BaseNodePostprocessor):
         self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle]
     ) -> List[NodeWithScore]:
         # subtracts 1 from the score
+
         for n in nodes:
             paper_id = list(n.node.relationships.items())[0][1].node_id
             n.node.metadata = {"link": f"https://arxiv.org/abs/{paper_id}"} 
@@ -34,8 +35,9 @@ def load_paper_search_tool(llm):
     paper_index = VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context, embed_model=embed_model)
 
     paper_query_engine = paper_index.as_query_engine(
+        streaming=True,
         similarity_top_k=5,
-        llm=llm,
+        llm=None,
         node_postprocessors=[LinkNodePostprocessor()]
     )
     

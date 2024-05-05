@@ -1,4 +1,5 @@
 import os
+import json
 from llama_index.llms.groq import Groq
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.ollama import Ollama
@@ -8,6 +9,8 @@ from llama_index.core.selectors import LLMSingleSelector
 from llama_index.core import Settings
 from src.tools.paper_search_tool import load_paper_search_tool
 from src.tools.code_tool import load_code_tool
+from starlette.responses import StreamingResponse
+
 from dotenv import load_dotenv
 import logging
 from constants import (
@@ -17,10 +20,17 @@ from constants import (
 )
 load_dotenv()
 
+    
+
 class AssistantService:
     query_engine: RouterQueryEngine
+    tools_dict: dict
     
     def __init__(self):
+        self.tools_dict = {
+            "paper_search_tool": load_paper_search_tool,
+            "code_tool": load_code_tool
+        }
         self.query_engine = self.create_query_engine()
     
     def create_query_engine(self):
@@ -35,8 +45,8 @@ class AssistantService:
         """
         llm = self.load_model(SERVICE, MODEL_ID)
         Settings.llm = llm
-        paper_search_tool = load_paper_search_tool(llm=llm)
-        code_tool = load_code_tool(llm=llm)
+        paper_search_tool = self.tools_dict["paper_search_tool"](llm=llm)
+        code_tool = self.tools_dict["code_tool"](llm=llm)
         
         
         query_engine = RouterQueryEngine(
@@ -79,6 +89,17 @@ class AssistantService:
         else:
             raise NotImplementedError("The implementation for other types of LLMs are not ready yet!")
     
+    async def generate_response(self, streaming_response):
+        
+        for text in streaming_response.response_gen:
+            yield text
+            # tool_list = list(self.tools_dict.keys())
+            # for key, val in streaming_response.metadata.items():
+            #     if key == "selector_result":
+            #         tool_called = tool_list[val.selections[0].index - 1]
+            #     else:
+            #         sources.append(val["link"])
+            # yield f'{{"completion": {text}, "tool": {None}, "sources": {sources}}}'
     def predict(self, prompt):
         """
         Predicts the next sequence of text given a prompt using the loaded language model.
@@ -90,5 +111,8 @@ class AssistantService:
             str: The generated text based on the prompt.
         """
         # Assuming query_engine is already created or accessible
-        response = self.query_engine.query(prompt)
-        return response
+        streaming_response = self.query_engine.query(prompt)
+        return StreamingResponse(self.generate_response(streaming_response), media_type="application/text")
+        
+        
+        

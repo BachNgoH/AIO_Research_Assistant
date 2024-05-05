@@ -1,7 +1,7 @@
 import streamlit as st 
 import requests
 from datetime import datetime
-
+import json
 
 
 # emojis: https://www.webfx.com/tools/emoji-cheat-sheet/
@@ -57,23 +57,27 @@ def run_app(username):
             
         res.raise_for_status()
         
-        data = res.json()
-        answer = data["completion"]
-        links = data.get("sources", [])
+        # data = res.json()
+        # answer = data["completion"]
+        # links = data.get("sources", [])
 
-        # with st.chat_message("assistant"):
+        with st.chat_message("assistant"):
             # Create a placeholder for streaming messages
-            # message_placeholder = st.empty()
-            # full_response = ""
+            message_placeholder = st.empty()
+            full_response = ""
 
-            # for chunk in res.iter_content(
-            #     chunk_size=None, decode_unicode=True
-            # ):
-            #     full_response += chunk
-            #     message_placeholder.markdown(full_response + "▌")
-
-            # message_placeholder.markdown(full_response)
-        append_and_display_message("assistant", answer, links)
+            for chunk in res.iter_content(
+                chunk_size=None, decode_unicode=True
+            ):
+                # print(chunk)
+                # try:
+                streaming_resp = chunk
+                full_response += streaming_resp
+                message_placeholder.markdown(full_response + "▌")
+                # except:
+                    # continue
+            message_placeholder.markdown(full_response)
+        # append_and_display_message("assistant", answer, links)
         
         # Save the chat history to the database
             
