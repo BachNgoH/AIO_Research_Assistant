@@ -1,4 +1,4 @@
-# Gemma as a Research Assistant
+# Gemma Research Assistant
 
 
 [notebook link](https://www.kaggle.com/code/bachngoh/gemma-data-assistant-w-llama-index-graph)

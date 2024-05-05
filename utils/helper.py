@@ -2,6 +2,7 @@ from collections import defaultdict
 import re
 import json
 import ast
+
 def has_citation(text):
   """Checks if a text string has citation marks.
 

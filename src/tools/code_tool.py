@@ -30,7 +30,7 @@ class CodeQueryEngine(CustomQueryEngine):
 
 def load_code_tool(llm):
     code_query_engine = CodeQueryEngine(llm = llm, qa_prompt=code_qa_prompt)
-    code_tool = QueryEngineTool(
+    code_tool = QueryEngineTool.from_defaults(
         query_engine=code_query_engine,
         description="Useful for answering code-based questions"
     )

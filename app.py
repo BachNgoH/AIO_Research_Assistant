@@ -1,20 +1,16 @@
-import os 
-from fastapi import FastAPI, Request
-from llama_index.llms.groq import Groq
+import sys
+from fastapi import FastAPI
 from dotenv import load_dotenv
+from api.controller import router
 
 load_dotenv()
 app = FastAPI()
 
-@app.post("/complete")
-async def complete_text(request: Request):
-    data = await request.json()
-    message = data.get("message")
-    api_key = os.getenv("GROQ_API_KEY")
+@app.get("/")
+async def root():
+    return {
+        "message": "Hello World!",
+    }
 
-    if not message:
-        return {"error": "Please provide 'text' in the request body"}
-    llm = Groq(model="llama3-70b-8192", api_key=api_key)
-    completion = llm.complete(message)
-    
-    return {"completion": completion.text}
+
+app.include_router(router, prefix="/v1")
