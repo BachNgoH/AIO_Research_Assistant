@@ -77,8 +77,9 @@ def run_app(username):
                 # except:
                     # continue
             message_placeholder.markdown(full_response)
-        # append_and_display_message("assistant", answer, links)
-        
+        st.session_state.messages.append(
+            {"role": "assistant", "content": full_response}
+        )        
         # Save the chat history to the database
             
     # with col2:
