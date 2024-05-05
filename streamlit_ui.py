@@ -24,7 +24,11 @@ def run_app(username):
     st.title("💬 Chatbot")
     st.caption("🚀 I'm a Local Bot")    
     # Function to append and display a new message
-    def append_and_display_message(role, content):
+    def append_and_display_message(role, content, links=None):
+        if links:
+            # Embed each link as a Markdown hyperlink
+            for link in links:
+                st.page_link(link, label=link)
         st.session_state.messages.append({"role": role, "content": content})
         st.chat_message(role).write(content)
 
@@ -53,7 +57,9 @@ def run_app(username):
             
         res.raise_for_status()
         
-        answer = res.json()["completion"]
+        data = res.json()
+        answer = data["completion"]
+        links = data.get("sources", [])
 
         # with st.chat_message("assistant"):
             # Create a placeholder for streaming messages
@@ -67,11 +73,7 @@ def run_app(username):
             #     message_placeholder.markdown(full_response + "▌")
 
             # message_placeholder.markdown(full_response)
-        st.session_state.messages.append(
-            {"role": "assistant", "content": answer}
-        )
-
-        st.chat_message("assistant").write(answer)
+        append_and_display_message("assistant", answer, links)
         
         # Save the chat history to the database
             

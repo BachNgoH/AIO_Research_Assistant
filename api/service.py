@@ -40,7 +40,7 @@ class AssistantService:
         
         
         query_engine = RouterQueryEngine(
-            selector=LLMSingleSelector.from_defaults(),
+            selector=LLMSingleSelector.from_defaults(llm=llm),
             query_engine_tools=[
                 code_tool,
                 paper_search_tool
@@ -91,4 +91,4 @@ class AssistantService:
         """
         # Assuming query_engine is already created or accessible
         response = self.query_engine.query(prompt)
-        return response.response
+        return response

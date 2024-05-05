@@ -1,9 +1,9 @@
 MODEL:  
   TEMPERATURE: 0.2
 
-  SERVICE: groq # [ ollama, openai, groq, gemini ] 
+  SERVICE: openai # [ ollama, openai, groq, gemini ] 
   
   EMBEDDING_MODEL_NAME: "text-embedding-3-large" # "intfloat/multilingual-e5-large" #=> 51 #"Salesforce/SFR-Embedding-Mistral" =>58 # "intfloat/e5-mistral-7b-instruct" => 56.89
   EMBEDDING_SERVICE: "openai" # ["hf", "ollama", openai] # default hf
 
-  MODEL_ID: llama3-70b-8192
+  MODEL_ID: gpt-4-turbo-preview

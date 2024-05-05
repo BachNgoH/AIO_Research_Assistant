@@ -10,5 +10,8 @@ async def complete_text(request: Request):
     data = await request.json()
     message = data.get("message")
     response = assistant.predict(message)
-    
-    return {"completion": response}
+    source_links = []
+    for node in response.source_nodes:
+        source_links.append(node.node.metadata["link"])
+    print(source_links)
+    return {"completion": response.response, "sources": source_links}
