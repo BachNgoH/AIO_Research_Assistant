@@ -8,9 +8,6 @@ import fsspec
 from llama_index.core.graph_stores.types import GraphStore
 from llama_index.core import VectorStoreIndex
 from llama_index.core.vector_stores.types import MetadataFilters, ExactMatchFilter
-import fsspec
-import logging
-logger = logging.getLogger(__name__)
 import re
 
 
@@ -215,13 +212,13 @@ class CitationGraphStore(GraphStore):
         """Create a SimpleGraphStore from a persist directory."""
         fs = fs or fsspec.filesystem("file")
         if not fs.exists(persist_path):
-            logger.warning(
-                f"No existing {__name__} found at {persist_path}. "
-                "Initializing a new graph_store from scratch. "
-            )
+            # logger.warning(
+            #     f"No existing {__name__} found at {persist_path}. "
+            #     "Initializing a new graph_store from scratch. "
+            # )
             return cls()
 
-        logger.debug(f"Loading {__name__} from {persist_path}.")
+        # logger.debug(f"Loading {__name__} from {persist_path}.")
         with fs.open(persist_path, "rb") as f:
             data_dict = json.load(f)
             data = CitationGraphStoreData.from_dict(data_dict)

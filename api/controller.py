@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Request
-from api.service import AssistantService
-import logging
+from .service import AssistantService
 
 router = APIRouter()
 assistant = AssistantService()
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 @router.post("/complete")
 async def complete_text(request: Request):
@@ -12,4 +11,4 @@ async def complete_text(request: Request):
     message = data.get("message")
     response = assistant.predict(message)
     
-    return {"completion": response.text}
+    return {"completion": response}

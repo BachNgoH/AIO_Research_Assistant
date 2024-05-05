@@ -5,7 +5,8 @@ from unsloth import FastLanguageModel
 import torch
 import json
 import argparse
-import random;random.seed(42)
+import random
+random.seed(42)
 
 
 prompt = """You are about to analyze segments of academic texts where authors cite other papers. 

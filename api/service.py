@@ -1,12 +1,13 @@
+import os
 from llama_index.llms.groq import Groq
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.gemini import Gemini
 from llama_index.core.query_engine import RouterQueryEngine
 from llama_index.core.selectors import LLMSingleSelector
-
-import os
-from src.tools import load_paper_search_tool, load_ds_tool, load_code_tool, load_graph_search_tool
+from llama_index.core import Settings
+from src.tools.paper_search_tool import load_paper_search_tool
+from src.tools.code_tool import load_code_tool
 from dotenv import load_dotenv
 import logging
 from constants import (
@@ -33,12 +34,13 @@ class AssistantService:
             RouterQueryEngine: An instance of RouterQueryEngine configured with the necessary tools and settings.
         """
         llm = self.load_model(SERVICE, MODEL_ID)
+        Settings.llm = llm
         paper_search_tool = load_paper_search_tool(llm=llm)
         code_tool = load_code_tool(llm=llm)
         
         
         query_engine = RouterQueryEngine(
-            selector=LLMSingleSelector,
+            selector=LLMSingleSelector.from_defaults(),
             query_engine_tools=[
                 code_tool,
                 paper_search_tool
@@ -48,7 +50,7 @@ class AssistantService:
         )
         return query_engine
     
-    def load_model(service, model_id):
+    def load_model(self, service, model_id):
         """
         Select a model for text generation using multiple services.
         Args:
@@ -89,4 +91,4 @@ class AssistantService:
         """
         # Assuming query_engine is already created or accessible
         response = self.query_engine.query(prompt)
-        return response
+        return response.response
