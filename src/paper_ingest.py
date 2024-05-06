@@ -13,11 +13,11 @@ from llama_index.core import Document
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
 
-device_type = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device_type = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 def load_data():
     
-    cols = ['id', 'title', 'abstract', 'categories']
+    cols = ['id', 'title', 'abstract', 'categories', 'update_date', 'authors']
     data = []
     file_name = './data/arxiv-metadata-oai-snapshot.json'
 
@@ -25,7 +25,7 @@ def load_data():
     with open(file_name, encoding='latin-1') as f:
         for line in f:
             doc = json.loads(line)
-            lst = [doc['id'], doc['title'], doc['abstract'], doc['categories']]
+            lst = [doc['id'], doc['title'], doc['abstract'], doc['categories'], doc['update_date'], doc['authors_parsed']]
             data.append(lst)
 
     df_data = pd.DataFrame(data=data, columns=cols)
@@ -58,7 +58,13 @@ def load_data():
 def ingest_paper():
     
     df_data = load_data()    
-    arxiv_documents = [Document(text=prepared_text, doc_id=id) for prepared_text,id in list(zip(df_data['prepared_text'], df_data['id']))]
+    
+    arxiv_documents = [Document(text=prepared_text, 
+                                metatdata={'paper_id': id, 
+                                           'title': title, 
+                                           'date': date,
+                                           'authors': authors}) 
+                       for _, (id, title, _, _, date, authors, prepared_text) in list(df_data.iterrows())]
     
     if EMBEDDING_SERVICE == "ollama":
         embed_model = OllamaEmbedding(model_name=EMBEDDING_MODEL_NAME)
