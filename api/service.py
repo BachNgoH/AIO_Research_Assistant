@@ -1,13 +1,17 @@
 import os
+import json
 from llama_index.llms.groq import Groq
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.gemini import Gemini
 from llama_index.core.query_engine import RouterQueryEngine
 from llama_index.core.selectors import LLMSingleSelector
+from llama_index.core.agent import AgentRunner
 from llama_index.core import Settings
 from src.tools.paper_search_tool import load_paper_search_tool
 from src.tools.code_tool import load_code_tool
+from starlette.responses import StreamingResponse
+
 from dotenv import load_dotenv
 import logging
 from constants import (
@@ -17,10 +21,17 @@ from constants import (
 )
 load_dotenv()
 
+    
+
 class AssistantService:
     query_engine: RouterQueryEngine
+    tools_dict: dict
     
     def __init__(self):
+        self.tools_dict = {
+            "paper_search_tool": load_paper_search_tool,
+            "code_tool": load_code_tool
+        }
         self.query_engine = self.create_query_engine()
     
     def create_query_engine(self):
@@ -35,13 +46,12 @@ class AssistantService:
         """
         llm = self.load_model(SERVICE, MODEL_ID)
         Settings.llm = llm
-        paper_search_tool = load_paper_search_tool(llm=llm)
-        code_tool = load_code_tool(llm=llm)
+        paper_search_tool = self.tools_dict["paper_search_tool"]()
+        code_tool = self.tools_dict["code_tool"](llm=llm)
         
         
-        query_engine = RouterQueryEngine(
-            selector=LLMSingleSelector.from_defaults(),
-            query_engine_tools=[
+        query_engine = AgentRunner.from_llm(
+            tools=[
                 code_tool,
                 paper_search_tool
             ],
@@ -90,5 +100,8 @@ class AssistantService:
             str: The generated text based on the prompt.
         """
         # Assuming query_engine is already created or accessible
-        response = self.query_engine.query(prompt)
-        return response.response
+        streaming_response = self.query_engine.stream_chat(prompt)
+        return StreamingResponse(streaming_response.response_gen, media_type="application/text")
+        
+        
+        

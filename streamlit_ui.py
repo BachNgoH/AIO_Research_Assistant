@@ -1,7 +1,7 @@
 import streamlit as st 
 import requests
 from datetime import datetime
-
+import json
 
 
 # emojis: https://www.webfx.com/tools/emoji-cheat-sheet/
@@ -24,7 +24,11 @@ def run_app(username):
     st.title("💬 Chatbot")
     st.caption("🚀 I'm a Local Bot")    
     # Function to append and display a new message
-    def append_and_display_message(role, content):
+    def append_and_display_message(role, content, links=None):
+        if links:
+            # Embed each link as a Markdown hyperlink
+            for link in links:
+                st.page_link(link, label=link)
         st.session_state.messages.append({"role": role, "content": content})
         st.chat_message(role).write(content)
 
@@ -53,26 +57,29 @@ def run_app(username):
             
         res.raise_for_status()
         
-        answer = res.json()["completion"]
+        # data = res.json()
+        # answer = data["completion"]
+        # links = data.get("sources", [])
 
-        # with st.chat_message("assistant"):
+        with st.chat_message("assistant"):
             # Create a placeholder for streaming messages
-            # message_placeholder = st.empty()
-            # full_response = ""
+            message_placeholder = st.empty()
+            full_response = ""
 
-            # for chunk in res.iter_content(
-            #     chunk_size=None, decode_unicode=True
-            # ):
-            #     full_response += chunk
-            #     message_placeholder.markdown(full_response + "▌")
-
-            # message_placeholder.markdown(full_response)
+            for chunk in res.iter_content(
+                chunk_size=None, decode_unicode=True
+            ):
+                # print(chunk)
+                # try:
+                streaming_resp = chunk
+                full_response += streaming_resp
+                message_placeholder.markdown(full_response + "▌")
+                # except:
+                    # continue
+            message_placeholder.markdown(full_response)
         st.session_state.messages.append(
-            {"role": "assistant", "content": answer}
-        )
-
-        st.chat_message("assistant").write(answer)
-        
+            {"role": "assistant", "content": full_response}
+        )        
         # Save the chat history to the database
             
     # with col2:
