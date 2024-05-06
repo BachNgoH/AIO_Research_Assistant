@@ -2,5 +2,6 @@ data/*
 outputs/*
 models/*
 DB/*
+venv/*
 .env
 __pycache__
