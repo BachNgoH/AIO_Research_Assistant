@@ -45,7 +45,7 @@ class AssistantService:
         """
         llm = self.load_model(SERVICE, MODEL_ID)
         Settings.llm = llm
-        paper_search_tool = self.tools_dict["paper_search_tool"](llm=llm)
+        # paper_search_tool = self.tools_dict["paper_search_tool"](llm=llm)
         code_tool = self.tools_dict["code_tool"](llm=llm)
         
         
@@ -53,7 +53,7 @@ class AssistantService:
             selector=LLMSingleSelector.from_defaults(llm=llm),
             query_engine_tools=[
                 code_tool,
-                paper_search_tool
+                # paper_search_tool
             ],
             verbose=True,
             llm=llm
