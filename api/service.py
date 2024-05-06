@@ -5,7 +5,6 @@ from llama_index.llms.openai import OpenAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.gemini import Gemini
 from llama_index.core.query_engine import RouterQueryEngine
-from llama_index.core.selectors import LLMSingleSelector
 from llama_index.core.agent import AgentRunner
 from llama_index.core import Settings
 from src.tools.paper_search_tool import load_paper_search_tool
@@ -52,7 +51,7 @@ class AssistantService:
         
         query_engine = AgentRunner.from_llm(
             tools=[
-                code_tool,
+                # code_tool,
                 paper_search_tool
             ],
             verbose=True,
@@ -101,7 +100,7 @@ class AssistantService:
         """
         # Assuming query_engine is already created or accessible
         streaming_response = self.query_engine.stream_chat(prompt)
-        return StreamingResponse(streaming_response.response_gen, media_type="application/text")
+        return StreamingResponse(streaming_response.response_gen, media_type="application/text; charset=utf-8")
         
         
         
