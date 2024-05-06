@@ -8,7 +8,7 @@ import json
 st.set_page_config(page_title="localbot", page_icon="🧑‍💼", layout="wide")
     
     
-def send_query(text, api_key):
+def send_query(text, api_key=None):
     headers = {"Content-Type": "application/json"}
     data={"message": text, "api_key": api_key}
     resp = requests.post("http://localhost:8000/v1/complete", json=data, headers=headers , stream=True)
@@ -16,7 +16,7 @@ def send_query(text, api_key):
 
 def run_app(username):
     st.sidebar.header("API Settings")
-    api_key = st.sidebar.text_input("Enter Groq API Key", key="api_key", type="password")
+    # api_key = st.sidebar.text_input("Enter Groq API Key", key="api_key", type="password")
     
     # col1, col2 = st.columns([2, 1])
     
@@ -53,7 +53,7 @@ def run_app(username):
     if query := st.chat_input():
         append_and_display_message("user", query)
         
-        res = send_query(query, api_key)
+        res = send_query(query)
             
         res.raise_for_status()
         

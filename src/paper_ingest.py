@@ -38,7 +38,7 @@ def load_data():
 
     # Filter the DataFrame to include rows where the 'categories' column contains any of the topics
     # The na=False parameter makes sure that NaN values are treated as False
-    df_data = df_data[df_data['categories'].str.contains(pattern, na=False)].sample(5000)
+    df_data = df_data[df_data['categories'].str.contains(pattern, na=False)]
     
     def clean_text(x):
         

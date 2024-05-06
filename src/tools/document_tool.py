@@ -5,11 +5,6 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import StorageContext
 from llama_index.core.schema import MetadataMode
-
-from llama_index.core import QueryBundle
-from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.schema import NodeWithScore
-from typing import List, Optional
 from llama_index.core.tools import FunctionTool
 
 simple_content_template = """

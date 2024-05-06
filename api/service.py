@@ -10,6 +10,7 @@ from llama_index.core import Settings
 from src.tools.paper_search_tool import load_paper_search_tool
 from src.tools.code_tool import load_code_tool
 from src.tools.document_tool import load_document_search_tool
+from src.constants import SYSTEM_PROMPT
 from starlette.responses import StreamingResponse
 
 from dotenv import load_dotenv
@@ -56,7 +57,8 @@ class AssistantService:
                 paper_search_tool
             ],
             verbose=True,
-            llm=llm
+            llm=llm,
+            system_prompt = SYSTEM_PROMPT
         )
         return query_engine
     
