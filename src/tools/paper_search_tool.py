@@ -17,18 +17,6 @@ Paper link: {paper_link}
 Paper: {paper_content}
 """
 
-class NodePostprocessor:
-    def _postprocess_nodes(
-        self, nodes: List[NodeWithScore]
-    ) -> List[NodeWithScore]:
-        # subtracts 1 from the score
-
-        for n in nodes:
-            paper_id = list(n.node.relationships.items())[0][1].node_id
-            n.node.metadata = {"link": f"https://arxiv.org/abs/{paper_id}"} 
-
-        return nodes
-
 def load_paper_search_tool():
     device_type = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
     embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5", cache_folder="./models", device=device_type) # must be the same as the previous stage
