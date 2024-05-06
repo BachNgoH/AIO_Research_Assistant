@@ -27,7 +27,7 @@ cd AIO_Research_Assistant
 - For Unix/macOS:
 ```bash
 python3 -m venv venv
-source env/bin/activat
+source env/bin/activate
 ```
 
 - For Windows:
