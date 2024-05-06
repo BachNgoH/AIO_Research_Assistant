@@ -13,16 +13,16 @@ from typing import List, Optional
 from llama_index.core.tools import FunctionTool
 
 simple_content_template = """
-Paper link: {paper_link}
+Document: {paper_link}
 Paper: {paper_content}
 """
 
-def load_paper_search_tool():
+def load_document_search_tool():
     device_type = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
     embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5", cache_folder="./models", device=device_type) # must be the same as the previous stage
 
-    chroma_client = chromadb.PersistentClient(path="./DB/arxiv")
-    chroma_collection = chroma_client.get_or_create_collection("gemma_assistant_arxiv_papers")
+    chroma_client = chromadb.PersistentClient(path="./DB/docs")
+    chroma_collection = chroma_client.get_or_create_collection("gemma_assistant_aio_docs")
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)    
     # load the vectorstore
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
@@ -32,17 +32,20 @@ def load_paper_search_tool():
         similarity_top_k=5,
     )
     
-    def retrieve_paper(query_str: str):
+    def retrieve_ai_concepts(query_str: str):
+        
         retriver_response =  paper_retriever.retrieve(query_str)
         retriever_result = []
         for n in retriver_response:
-            paper_id = list(n.node.relationships.items())[0][1].node_id
+            print([n.node.metadata])
+            file_name = n.node.metadata["file_name"]
+            # paper_id = list(n.node.relationships.items())[0][1].node_id
             paper_content = n.node.get_content(metadata_mode=MetadataMode.LLM)
             
-            paper_link = f"https://arxiv.org/abs/{paper_id}"
+            document_link = f"https://github.com/BachNgoH/AIO_Documents/tree/main/Documents/{file_name}"
             retriever_result.append(
                 simple_content_template.format(
-                    paper_link=paper_link, 
+                    paper_link=document_link, 
                     paper_content=paper_content
                 )
             )
@@ -53,4 +56,4 @@ def load_paper_search_tool():
     #     query_engine=paper_query_engine,
     #     description="Useful for answering questions related to scientific papers",
     # )
-    return FunctionTool.from_defaults(retrieve_paper, description="Useful for answering questions related to scientific papers")
+    return FunctionTool.from_defaults(retrieve_ai_concepts, description="Useful for answering about AI and Python concepts")

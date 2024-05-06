@@ -9,11 +9,12 @@ from llama_index.core.agent import AgentRunner
 from llama_index.core import Settings
 from src.tools.paper_search_tool import load_paper_search_tool
 from src.tools.code_tool import load_code_tool
+from src.tools.document_tool import load_document_search_tool
 from starlette.responses import StreamingResponse
 
 from dotenv import load_dotenv
 import logging
-from constants import (
+from src.constants import (
     SERVICE,
     TEMPERATURE,
     MODEL_ID
@@ -29,7 +30,8 @@ class AssistantService:
     def __init__(self):
         self.tools_dict = {
             "paper_search_tool": load_paper_search_tool,
-            "code_tool": load_code_tool
+            "code_tool": load_code_tool,
+            "document_search_tool": load_document_search_tool
         }
         self.query_engine = self.create_query_engine()
     
@@ -46,12 +48,11 @@ class AssistantService:
         llm = self.load_model(SERVICE, MODEL_ID)
         Settings.llm = llm
         paper_search_tool = self.tools_dict["paper_search_tool"]()
-        code_tool = self.tools_dict["code_tool"](llm=llm)
-        
+        document_search_tool = self.tools_dict["document_search_tool"]()
         
         query_engine = AgentRunner.from_llm(
             tools=[
-                # code_tool,
+                document_search_tool,
                 paper_search_tool
             ],
             verbose=True,

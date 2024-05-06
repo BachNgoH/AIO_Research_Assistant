@@ -1,12 +1,17 @@
+import os
 import torch
 import chromadb
 import json
+import sys
 import pandas as pd
 from llama_index.core import StorageContext, VectorStoreIndex
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.core import Document
-
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
 
 device_type = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -14,7 +19,7 @@ def load_data():
     
     cols = ['id', 'title', 'abstract', 'categories']
     data = []
-    file_name = '../data/arxiv-metadata-oai-snapshot.json'
+    file_name = './data/arxiv-metadata-oai-snapshot.json'
 
 
     with open(file_name, encoding='latin-1') as f:
@@ -54,8 +59,17 @@ def ingest_paper():
     
     df_data = load_data()    
     arxiv_documents = [Document(text=prepared_text, doc_id=id) for prepared_text,id in list(zip(df_data['prepared_text'], df_data['id']))]
-    embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5", cache_folder="../models", device=device_type)
-    chroma_client = chromadb.PersistentClient(path="../DB/arxiv")
+    
+    if EMBEDDING_SERVICE == "ollama":
+        embed_model = OllamaEmbedding(model_name=EMBEDDING_MODEL_NAME)
+    elif EMBEDDING_SERVICE == "hf":
+        embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL_NAME, cache_folder="./models", device=device_type)
+    elif EMBEDDING_SERVICE == "openai":
+        embed_model = OpenAIEmbedding(model=EMBEDDING_MODEL_NAME, api_key=os.environ["OPENAI_API_KEY"])
+    else:
+        raise NotImplementedError()   
+       
+    chroma_client = chromadb.PersistentClient(path="./DB/arxiv")
     chroma_collection = chroma_client.get_or_create_collection("gemma_assistant_arxiv_papers")
 
 

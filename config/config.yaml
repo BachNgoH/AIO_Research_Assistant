@@ -3,8 +3,8 @@ MODEL:
 
   SERVICE: openai # [ ollama, openai, groq, gemini ] 
 
-  EMBEDDING_MODEL_NAME: "text-embedding-3-large" # "intfloat/multilingual-e5-large" #=> 51 #"Salesforce/SFR-Embedding-Mistral" =>58 # "intfloat/e5-mistral-7b-instruct" => 56.89
-  EMBEDDING_SERVICE: "openai" # ["hf", "ollama", openai] # default hf
+  EMBEDDING_MODEL_NAME: "BAAI/bge-small-en-v1.5" # "intfloat/multilingual-e5-large" #=> 51 #"Salesforce/SFR-Embedding-Mistral" =>58 # "intfloat/e5-mistral-7b-instruct" => 56.89
+  EMBEDDING_SERVICE: "hf" # ["hf", "ollama", openai] # default hf
 
-  # MODEL_ID: gpt-3.5-turbo
-  MODEL_ID: "gpt-4-turbo-preview"
+  MODEL_ID: gpt-3.5-turbo
+  # MODEL_ID: "gpt-4-turbo-preview"
