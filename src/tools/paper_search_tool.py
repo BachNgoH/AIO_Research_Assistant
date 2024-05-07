@@ -40,7 +40,7 @@ def load_paper_search_tool():
         similarity_top_k=5,
     )
     
-    def retrieve_paper(query_str: str):
+    def retrieve_paper(query_str: str, year: int = None):
         retriver_response =  paper_retriever.retrieve(query_str)
         retriever_result = []
         for n in retriver_response:
