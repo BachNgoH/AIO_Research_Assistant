@@ -57,13 +57,12 @@ def load_data():
 
 def ingest_paper():
     
-    df_data = load_data()    
+    df_data = load_data().sample(1000)
     
     arxiv_documents = [Document(text=prepared_text, 
-                                metatdata={'paper_id': id, 
+                                metadata={'paper_id': id, 
                                            'title': title, 
-                                           'date': date,
-                                           'authors': authors}) 
+                                           'date': date}) 
                        for _, (id, title, _, _, date, authors, prepared_text) in list(df_data.iterrows())]
     
     if EMBEDDING_SERVICE == "ollama":

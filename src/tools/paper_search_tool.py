@@ -1,7 +1,7 @@
 import os
 import torch
 import chromadb
-from llama_index.core import VectorStoreIndex
+from llama_index.core import VectorStoreIndex, get_response_synthesizer
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import StorageContext
@@ -9,7 +9,27 @@ from llama_index.core.schema import MetadataMode
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.core.tools import FunctionTool
+from llama_index.core import QueryBundle
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from llama_index.core.schema import NodeWithScore
+from llama_index.core import Settings
+from typing import List, Optional
 from src.constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
+
+
+class PaperYearNodePostprocessor(BaseNodePostprocessor):
+    def _postprocess_nodes(
+        self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle]
+    ) -> List[NodeWithScore]:
+        # subtracts 1 from the score
+        paper_year = query_bundle.query_str.split("\n")[0]
+        if paper_year == "None":
+            return nodes
+        else:
+            for n in nodes:
+                print([n])
+
+            return nodes
 
 
 simple_content_template = """
@@ -35,16 +55,21 @@ def load_paper_search_tool():
     # load the vectorstore
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     paper_index = VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context, embed_model=embed_model)
-
+    Settings.llm = None
     paper_retriever = paper_index.as_retriever(
-        similarity_top_k=5,
+        similarity_top_k=5,    
     )
+    node_postporcessor = PaperYearNodePostprocessor()
     
-    def retrieve_paper(query_str: str, year: int = None):
-        retriver_response =  paper_retriever.retrieve(query_str)
+    def retrieve_paper(query_str: str, year: int = "None"):
+        query_str = f"{year}\n{query_str}"
+        retriever_response =  node_postporcessor.postprocess_nodes(
+            paper_retriever.retrieve(query_str), 
+            QueryBundle(query_str=query_str))
+        
         retriever_result = []
-        for n in retriver_response:
-            paper_id = list(n.node.relationships.items())[0][1].node_id
+        for n in retriever_response:
+            paper_id = n.metadata["paper_id"]
             paper_content = n.node.get_content(metadata_mode=MetadataMode.LLM)
             
             paper_link = f"https://arxiv.org/abs/{paper_id}"
@@ -61,4 +86,4 @@ def load_paper_search_tool():
     #     query_engine=paper_query_engine,
     #     description="Useful for answering questions related to scientific papers",
     # )
-    return FunctionTool.from_defaults(retrieve_paper, description="Useful for answering questions related to scientific papers")
+    return FunctionTool.from_defaults(retrieve_paper, description="Useful for answering questions related to scientific papers, add paper year if needed")
