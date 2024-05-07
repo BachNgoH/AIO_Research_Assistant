@@ -1,3 +1,4 @@
+import os
 import torch
 import chromadb
 from llama_index.core import VectorStoreIndex
@@ -5,12 +6,11 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import StorageContext
 from llama_index.core.schema import MetadataMode
-
-from llama_index.core import QueryBundle
-from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.schema import NodeWithScore
-from typing import List, Optional
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.core.tools import FunctionTool
+from src.constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
+
 
 simple_content_template = """
 Paper link: {paper_link}
@@ -19,7 +19,15 @@ Paper: {paper_content}
 
 def load_paper_search_tool():
     device_type = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
-    embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5", cache_folder="./models", device=device_type) # must be the same as the previous stage
+    if EMBEDDING_SERVICE == "ollama":
+        embed_model = OllamaEmbedding(model_name=EMBEDDING_MODEL_NAME)
+    elif EMBEDDING_SERVICE == "hf":
+        embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL_NAME, cache_folder="./models", device=device_type, embed_batch_size=64)
+    elif EMBEDDING_SERVICE == "openai":
+        embed_model = OpenAIEmbedding(model=EMBEDDING_MODEL_NAME, api_key=os.environ["OPENAI_API_KEY"])
+    else:
+        raise NotImplementedError()   
+
 
     chroma_client = chromadb.PersistentClient(path="./DB/arxiv")
     chroma_collection = chroma_client.get_or_create_collection("gemma_assistant_arxiv_papers")

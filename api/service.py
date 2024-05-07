@@ -11,14 +11,15 @@ from src.tools.paper_search_tool import load_paper_search_tool
 from src.tools.code_tool import load_code_tool
 from src.tools.document_tool import load_document_search_tool
 from src.constants import SYSTEM_PROMPT
-from starlette.responses import StreamingResponse
+from starlette.responses import StreamingResponse, Response
 
 from dotenv import load_dotenv
 import logging
 from src.constants import (
     SERVICE,
     TEMPERATURE,
-    MODEL_ID
+    MODEL_ID,
+    STREAM
 )
 load_dotenv()
 
@@ -102,8 +103,10 @@ class AssistantService:
             str: The generated text based on the prompt.
         """
         # Assuming query_engine is already created or accessible
-        streaming_response = self.query_engine.stream_chat(prompt)
-        return StreamingResponse(streaming_response.response_gen, media_type="application/text; charset=utf-8")
-        
+        if STREAM:
+            streaming_response = self.query_engine.stream_chat(prompt)
+            return StreamingResponse(streaming_response.response_gen, media_type="application/text; charset=utf-8")
+        else:
+            return Response(self.query_engine.chat(prompt).response, media_type="application/text; charset=utf-8")
         
         

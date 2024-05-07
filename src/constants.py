@@ -5,6 +5,7 @@ cfg = get_config('config/config.yaml')
 cfg.merge_from_file('config/postgres.yaml')
 
 
+STREAM = cfg.MODEL.STREAM
 SERVICE = cfg.MODEL.SERVICE
 TEMPERATURE = cfg.MODEL.TEMPERATURE
 MODEL_ID = cfg.MODEL.MODEL_ID

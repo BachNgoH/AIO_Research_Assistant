@@ -69,7 +69,7 @@ def ingest_paper():
     if EMBEDDING_SERVICE == "ollama":
         embed_model = OllamaEmbedding(model_name=EMBEDDING_MODEL_NAME)
     elif EMBEDDING_SERVICE == "hf":
-        embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL_NAME, cache_folder="./models", device=device_type)
+        embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL_NAME, cache_folder="./models", device=device_type, embed_batch_size=64)
     elif EMBEDDING_SERVICE == "openai":
         embed_model = OpenAIEmbedding(model=EMBEDDING_MODEL_NAME, api_key=os.environ["OPENAI_API_KEY"])
     else:
