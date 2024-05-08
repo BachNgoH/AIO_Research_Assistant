@@ -27,13 +27,13 @@ cd AIO_Research_Assistant
 - For Unix/macOS:
 ```bash
 python3 -m venv venv
-source env/bin/activate
+source venv/bin/activate
 ```
 
 - For Windows:
 ```bash
 python -m venv venv
-.\env\Scripts\activate
+.\venv\Scripts\activate
 ```
 
 **3. Install the required dependencies:**
