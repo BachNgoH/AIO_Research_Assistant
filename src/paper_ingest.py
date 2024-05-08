@@ -10,8 +10,10 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.core import Document
+from tqdm import tqdm
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
+tqdm.pandas()
 
 device_type = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
@@ -49,21 +51,20 @@ def load_data():
         
         return new_text
 
-    df_data['title'] = df_data['title'].apply(clean_text)
-    df_data['abstract'] = df_data['abstract'].apply(clean_text)
+    df_data['title'] = df_data['title'].progress_apply(clean_text)
+    df_data['abstract'] = df_data['abstract'].progress_apply(clean_text)
 
     df_data['prepared_text'] = df_data['title'] + '\n ' + df_data['abstract']
     return df_data
 
 def ingest_paper():
     
-    df_data = load_data()    
+    df_data = load_data()
     
     arxiv_documents = [Document(text=prepared_text, 
-                                metatdata={'paper_id': id, 
+                                metadata={'paper_id': id, 
                                            'title': title, 
-                                           'date': date,
-                                           'authors': authors}) 
+                                           'date': date}) 
                        for _, (id, title, _, _, date, authors, prepared_text) in list(df_data.iterrows())]
     
     if EMBEDDING_SERVICE == "ollama":
