@@ -17,25 +17,28 @@ from typing import List, Optional
 from src.constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
 
 
-class PaperYearNodePostprocessor(BaseNodePostprocessor):
-    def _postprocess_nodes(
-        self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle]
-    ) -> List[NodeWithScore]:
-        # subtracts 1 from the score
-        paper_year = query_bundle.query_str.split("\n")[0]
-        if paper_year == "None":
-            return nodes
-        else:
-            for n in nodes:
-                print([n])
-
-            return nodes
-
-
 simple_content_template = """
 Paper link: {paper_link}
 Paper: {paper_content}
 """
+
+
+class PaperYearNodePostprocessor(BaseNodePostprocessor):
+    def _postprocess_nodes(
+        self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle]
+    ) -> List[NodeWithScore]:
+        paper_year = query_bundle.query_str.split("\n")[0]
+        if paper_year == "None":
+            return nodes
+        filtered_nodes = []
+        for node in nodes:
+            date = node.metadata.get('date', '')  # Get the date or default to empty string if not present
+            if date:  # Check if date is not empty
+                date_year = date.split('-')[0]  # Extract the year from the 'YYYY-MM-DD' format
+                if date_year == str(paper_year):  # Compare the extracted year with the target year
+                    filtered_nodes.append(node)
+        return filtered_nodes
+
 
 def load_paper_search_tool():
     device_type = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
@@ -57,11 +60,11 @@ def load_paper_search_tool():
     paper_index = VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context, embed_model=embed_model)
     Settings.llm = None
     paper_retriever = paper_index.as_retriever(
-        similarity_top_k=5,    
+        similarity_top_k=20,    
     )
     node_postporcessor = PaperYearNodePostprocessor()
     
-    def retrieve_paper(query_str: str, year: int = "None"):
+    def retrieve_paper(query_str: str, year: str = "None"):
         query_str = f"{year}\n{query_str}"
         retriever_response =  node_postporcessor.postprocess_nodes(
             paper_retriever.retrieve(query_str), 
