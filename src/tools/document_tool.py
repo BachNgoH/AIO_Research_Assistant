@@ -15,9 +15,25 @@ from llama_index.core.tools import FunctionTool
 dotenv.load_dotenv()
 
 simple_content_template = """
-Document: {paper_link}
-Paper: {paper_content}
+Link: {paper_link}
+Document: {paper_content}
 """
+
+simple_web_search_template = """
+Title: {title}
+Link: {search_link}
+Content: {search_content}
+"""
+
+def search_output_parser(response):
+    contents = response["organic"]
+    web_search_results = []
+    for content in contents:
+        title = content["title"]
+        link = content["link"]
+        snippet = content["snippet"]
+        web_search_results.append(simple_web_search_template.format(title=title, search_link=link, search_content=snippet))
+    return web_search_results
 
 def web_search_function(query, location: Optional[str] = None):
     url = "https://google.serper.dev/search"
@@ -31,7 +47,7 @@ def web_search_function(query, location: Optional[str] = None):
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    return response.text
+    return search_output_parser(response.json())
 
 
 def load_document_search_tool():
@@ -52,7 +68,7 @@ def load_document_search_tool():
     def retrieve_ai_concepts(query_str: str):
         
         retriver_response =  paper_retriever.retrieve(query_str)
-        web_response = web_search_function(query_str)
+        web_search_results = web_search_function(query_str)
         retriever_result = []
         for n in retriver_response:
             file_name = n.node.metadata["file_name"]
@@ -67,7 +83,7 @@ def load_document_search_tool():
                 )
             )
             
-        print(web_response)
+        retriever_result += web_search_results
         return retriever_result
             
         
