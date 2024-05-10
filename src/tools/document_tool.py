@@ -1,5 +1,10 @@
+import os
 import torch
+import json
 import chromadb
+import requests
+from typing import Optional
+import dotenv
 from llama_index.core import VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
@@ -7,10 +12,27 @@ from llama_index.core import StorageContext
 from llama_index.core.schema import MetadataMode
 from llama_index.core.tools import FunctionTool
 
+dotenv.load_dotenv()
+
 simple_content_template = """
 Document: {paper_link}
 Paper: {paper_content}
 """
+
+def web_search_function(query, location: Optional[str] = None):
+    url = "https://google.serper.dev/search"
+    payload = json.dumps({
+        "q": query,
+        # "gl": location
+    })
+    headers = {
+        'X-API-KEY': os.getenv('SERPER_API_KEY'),
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+    return response.text
+
 
 def load_document_search_tool():
     device_type = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
@@ -30,9 +52,9 @@ def load_document_search_tool():
     def retrieve_ai_concepts(query_str: str):
         
         retriver_response =  paper_retriever.retrieve(query_str)
+        web_response = web_search_function(query_str)
         retriever_result = []
         for n in retriver_response:
-            print([n.node.metadata])
             file_name = n.node.metadata["file_name"]
             # paper_id = list(n.node.relationships.items())[0][1].node_id
             paper_content = n.node.get_content(metadata_mode=MetadataMode.LLM)
@@ -44,6 +66,8 @@ def load_document_search_tool():
                     paper_content=paper_content
                 )
             )
+            
+        print(web_response)
         return retriever_result
             
         

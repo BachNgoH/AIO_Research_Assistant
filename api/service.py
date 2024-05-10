@@ -1,10 +1,8 @@
 import os
-import json
 from llama_index.llms.groq import Groq
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.gemini import Gemini
-from llama_index.core.query_engine import RouterQueryEngine
 from llama_index.core.agent import AgentRunner
 from llama_index.core import Settings
 from src.tools.paper_search_tool import load_paper_search_tool
@@ -21,12 +19,12 @@ from src.constants import (
     MODEL_ID,
     STREAM
 )
-load_dotenv()
+load_dotenv(override=True)
 
     
 
 class AssistantService:
-    query_engine: RouterQueryEngine
+    query_engine: AgentRunner
     tools_dict: dict
     
     def __init__(self):
@@ -45,7 +43,7 @@ class AssistantService:
         It loads a language model, along with specific tools for tasks such as code search and paper search.
         
         Returns:
-            RouterQueryEngine: An instance of RouterQueryEngine configured with the necessary tools and settings.
+            AgentRunner: An instance of AgentRunner configured with the necessary tools and settings.
         """
         llm = self.load_model(SERVICE, MODEL_ID)
         Settings.llm = llm
@@ -82,13 +80,13 @@ class AssistantService:
             return Ollama(model=model_id, temperature=TEMPERATURE)
         elif service == "openai":
             logging.info(f"Loading OpenAI Model: {model_id}")
-            return OpenAI(model=model_id, temperature=TEMPERATURE, api_key=os.environ["OPENAI_API_KEY"])
+            return OpenAI(model=model_id, temperature=TEMPERATURE, api_key=os.getenv("OPENAI_API_KEY"))
         elif service == "groq":
             logging.info(f"Loading Groq Model: {model_id}")    
-            return Groq(model=model_id, temperature=TEMPERATURE, api_key=os.environ["GROQ_API_KEY"])
+            return Groq(model=model_id, temperature=TEMPERATURE, api_key=os.getenv("GROQ_API_KEY"))
         elif service == "gemini":
             logging.info(f"Loading Gemini Model: {model_id}")
-            return Gemini(model=model_id, temperature=TEMPERATURE, api_key=os.environ["GOOGLE_API_KEY"])
+            return Gemini(model=model_id, temperature=TEMPERATURE, api_key=os.getenv("GOOGLE_API_KEY"))
         else:
             raise NotImplementedError("The implementation for other types of LLMs are not ready yet!")
     
