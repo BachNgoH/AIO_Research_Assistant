@@ -1,7 +1,9 @@
 import os
 import torch
 import chromadb
-from llama_index.core import VectorStoreIndex, get_response_synthesizer
+import networkx as nx
+from pyvis.network import Network
+from llama_index.core import VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import StorageContext
@@ -15,7 +17,7 @@ from llama_index.core.schema import NodeWithScore
 from llama_index.core import Settings
 from typing import List, Optional
 from src.constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
-
+from src.tools.graph_search_tool import load_graph_data, find_graph_nodes_from_retriever
 
 simple_content_template = """
 Paper link: {paper_link}
@@ -60,9 +62,11 @@ def load_paper_search_tool():
     paper_index = VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context, embed_model=embed_model)
     Settings.llm = None
     paper_retriever = paper_index.as_retriever(
-        similarity_top_k=20,    
+        similarity_top_k=10,    
     )
     node_postporcessor = PaperYearNodePostprocessor()
+    
+    graph = load_graph_data()
     
     def retrieve_paper(query_str: str, year: str = "None"):
         query_str = f"{year}\n{query_str}"
@@ -82,6 +86,28 @@ def load_paper_search_tool():
                     paper_content=paper_content
                 )
             )
+        graph_nodes = find_graph_nodes_from_retriever(graph, retriever_response)
+        
+        # Generate ego graphs
+        ego_graphs = [nx.ego_graph(graph, node, radius=1) for node in graph_nodes]
+
+        # Combine all ego graphs into one graph
+        combined_ego_graph = nx.compose_all(ego_graphs)
+        nodes_to_remove = [node for node in combined_ego_graph if combined_ego_graph.degree(node) < 4]
+
+        # Remove the nodes from the ego graph
+        combined_ego_graph.remove_nodes_from(nodes_to_remove)
+
+        # Assign colors: highlighted nodes in red, others in blue
+        highlight_color = "orange"
+        for node in combined_ego_graph.nodes():
+            if node in graph_nodes:
+                combined_ego_graph.nodes[node]['color'] = highlight_color
+                
+        nt = Network(notebook=True, font_color='#10000000')
+        nt.from_nx(combined_ego_graph)
+        nt.save_graph("./outputs/nx_graph.html")
+                
         return retriever_result
             
         

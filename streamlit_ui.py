@@ -16,6 +16,8 @@ def send_query(text, api_key=None):
 
 def run_app(username):
     st.sidebar.header("API Settings")
+
+    st.sidebar.html("./outputs/nx_graph.html")
     # api_key = st.sidebar.text_input("Enter Groq API Key", key="api_key", type="password")
     
     # col1, col2 = st.columns([2, 1])
