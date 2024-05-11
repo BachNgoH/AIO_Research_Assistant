@@ -2,6 +2,19 @@ from tqdm import tqdm
 from datasets import load_dataset
 import json
 import re
+import pandas as pd
+
+
+def search_paper_by_name(name, title_dict):
+    # matches = df_data['title'].str.contains(name, case=False, na=False, regex=False)
+    # filtered_df = df_data[matches]
+    # if len(filtered_df) == 0:
+    #     return None
+    # return filtered_df.iloc[0]['id']
+    try:
+        return title_dict[name]
+    except:
+        return None
 
 # Function to normalize author names for comparison
 def normalize_author_name(name):
@@ -187,6 +200,20 @@ def match_numeric_citation(citations):
 
 
 def load_and_save_graph_data():
+    cols = ['id', 'title', 'abstract', 'categories', 'update_date', 'authors']
+    data = []
+    file_name = './data/arxiv-metadata-oai-snapshot.json'
+
+
+    with open(file_name, encoding='latin-1') as f:
+        for line in tqdm(f):
+            doc = json.loads(line)
+            lst = [doc['id'], doc['title'], doc['abstract'], doc['categories'], doc['update_date'], doc['authors_parsed']]
+            data.append(lst)
+
+    df_data = pd.DataFrame(data=data, columns=cols)
+    title_dict = {title.lower(): arxiv_id for title, arxiv_id in zip(df_data['title'].tolist(), df_data['id'].to_list())}
+    
     parsed_article = load_dataset("BachNgoH/ParsedArxivPapers")['train']
     parsed_article = parsed_article.to_list()
 
@@ -218,7 +245,24 @@ def load_and_save_graph_data():
 
         grouped_citations = regroup_citations_by_ref_id(article['citation_data'])
         article['grouped_citations'] = grouped_citations
-        
+    
+
+    print("Adding paper id")
+    for article_dict in tqdm(annotated_article, total=len(annotated_article)):
+
+        article_dict["arxiv_id"] = search_paper_by_name(article_dict['title'].lower(), title_dict)
+
+        if "grouped_citations" in article_dict.keys():
+            article_dict["mapped_citation"] = {}
+            for key,val in article_dict['grouped_citations'].items():
+                for ref in article_dict["references"]:
+                    if ref["ref_id"] == key:
+                        title = ref["title"]
+
+                title = title.lower()
+                arxiv_id = search_paper_by_name(title, title_dict)
+                article_dict['mapped_citation'][key] = {"title": title, 'arxiv_id': arxiv_id, 'citation': val}
+                
     with open("./outputs/parsed_arxiv_papers.json", "w") as f:
         json.dump(annotated_article, f)
 
