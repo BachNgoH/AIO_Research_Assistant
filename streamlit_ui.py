@@ -2,6 +2,8 @@ import streamlit as st
 import requests
 from datetime import datetime
 import json
+import os
+import streamlit.components.v1 as components
 
 
 # emojis: https://www.webfx.com/tools/emoji-cheat-sheet/
@@ -16,6 +18,13 @@ def send_query(text, api_key=None):
 
 def run_app(username):
     st.sidebar.header("API Settings")
+    # with st.sidebar:
+
+    #     graph_cache_file = './outputs/nx_graph.html'
+        
+    #     HtmlFile = open(graph_cache_file, 'r', encoding='utf-8')
+    #     source_code = HtmlFile.read()
+    #     components.html(source_code, height = 500, width=500)
     # api_key = st.sidebar.text_input("Enter Groq API Key", key="api_key", type="password")
     
     # col1, col2 = st.columns([2, 1])
@@ -77,6 +86,13 @@ def run_app(username):
                 # except:
                     # continue
             message_placeholder.markdown(full_response)
+        with st.sidebar:
+
+            graph_cache_file = './outputs/nx_graph.html'
+            
+            HtmlFile = open(graph_cache_file, 'r', encoding='utf-8')
+            source_code = HtmlFile.read()
+            components.html(source_code, height = 500, width=500)
         st.session_state.messages.append(
             {"role": "assistant", "content": full_response}
         )        
