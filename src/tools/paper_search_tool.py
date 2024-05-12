@@ -93,7 +93,7 @@ def load_paper_search_tool():
 
         # Combine all ego graphs into one graph
         combined_ego_graph = nx.compose_all(ego_graphs)
-        nodes_to_remove = [node for node in combined_ego_graph if combined_ego_graph.degree(node) < 4]
+        nodes_to_remove = [node for node in combined_ego_graph if combined_ego_graph.degree(node) < 3]
 
         # Remove the nodes from the ego graph
         combined_ego_graph.remove_nodes_from(nodes_to_remove)
