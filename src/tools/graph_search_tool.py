@@ -174,6 +174,22 @@ def load_graph_data() -> nx.DiGraph:
         
     return G
 
+def trim_graph_by_least_degree(G, max_nodes):
+    """
+    Trims a graph by removing nodes with the least degree until the number of nodes is less than or equal to max_nodes.
+    
+    Parameters:
+    - G (nx.Graph): The original graph.
+    - max_nodes (int): The maximum number of nodes the graph should have.
+    """
+    while len(G) > max_nodes:
+        # Calculate the degree of each node
+        degrees = G.degree()
+        # Sort nodes by degree (ascending order) and remove the node with the smallest degree
+        node_to_remove = sorted(degrees, key=lambda x: x[1])[0][0]
+        G.remove_node(node_to_remove)
+        
+    return G
 
 def create_ego_graph(retriever_response: NodeWithScore, service: str = "ss", graph: nx.DiGraph = None) -> nx.DiGraph:
     if service not in ["local", "ss"]:
@@ -197,7 +213,7 @@ def create_ego_graph(retriever_response: NodeWithScore, service: str = "ss", gra
         for node in combined_ego_graph.nodes():
             if node in graph_nodes:
                 combined_ego_graph.nodes[node]['color'] = highlight_color
-        return combined_ego_graph
+        return trim_graph_by_least_degree(combined_ego_graph, 25)
     elif service == "ss":
         paper_ids = ["arxiv:"+ n.metadata["paper_id"] for n in retriever_response]
         url = 'https://api.semanticscholar.org/graph/v1/paper/batch'
@@ -238,6 +254,6 @@ def create_ego_graph(retriever_response: NodeWithScore, service: str = "ss", gra
                 if node in source_nodes:
                     G.nodes[node]['color'] = highlight_color
                     
-            return G
+            return trim_graph_by_least_degree(G, 25)
         else:
             raise ValueError(f"Request failed with status code {response.status_code}.")
