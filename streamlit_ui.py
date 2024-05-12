@@ -69,7 +69,14 @@ def run_app(username):
         # data = res.json()
         # answer = data["completion"]
         # links = data.get("sources", [])
+        with st.sidebar:
 
+            graph_cache_file = './outputs/nx_graph.html'
+            
+            HtmlFile = open(graph_cache_file, 'r', encoding='utf-8')
+            source_code = HtmlFile.read()
+            components.html(source_code, height = 500, width=500)
+            
         with st.chat_message("assistant"):
             # Create a placeholder for streaming messages
             message_placeholder = st.empty()
@@ -86,13 +93,7 @@ def run_app(username):
                 # except:
                     # continue
             message_placeholder.markdown(full_response)
-        with st.sidebar:
 
-            graph_cache_file = './outputs/nx_graph.html'
-            
-            HtmlFile = open(graph_cache_file, 'r', encoding='utf-8')
-            source_code = HtmlFile.read()
-            components.html(source_code, height = 500, width=500)
         st.session_state.messages.append(
             {"role": "assistant", "content": full_response}
         )        

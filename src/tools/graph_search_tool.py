@@ -1,12 +1,8 @@
 from tqdm import tqdm
 import json
-import torch
+import requests
 import networkx as nx
-from llama_index.core import VectorStoreIndex
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core import StorageContext
-from llama_index.core.vector_stores.types import MetadataFilters, ExactMatchFilter
+from llama_index.core.schema import NodeWithScore
 
 relationships_dict = {
     "Supporting Evidence": "Is Evidence For",
@@ -177,3 +173,71 @@ def load_graph_data() -> nx.DiGraph:
         G.add_edge(source_node.title, target_node.title, title=str(relationship), category=relationship.category, explanation=relationship.explanation)
         
     return G
+
+
+def create_ego_graph(retriever_response: NodeWithScore, service: str = "ss", graph: nx.DiGraph = None) -> nx.DiGraph:
+    if service not in ["local", "ss"]:
+        raise ValueError("Service must be either 'local' or 'ss'.")
+    if service == "local":
+                    
+        graph_nodes = find_graph_nodes_from_retriever(graph, retriever_response)
+        
+        # Generate ego graphs
+        ego_graphs = [nx.ego_graph(graph, node, radius=1) for node in graph_nodes]
+
+        # Combine all ego graphs into one graph
+        combined_ego_graph = nx.compose_all(ego_graphs)
+        nodes_to_remove = [node for node in combined_ego_graph if combined_ego_graph.degree(node) < 3]
+
+        # Remove the nodes from the ego graph
+        combined_ego_graph.remove_nodes_from(nodes_to_remove)
+
+        # Assign colors: highlighted nodes in red, others in blue
+        highlight_color = "orange"
+        for node in combined_ego_graph.nodes():
+            if node in graph_nodes:
+                combined_ego_graph.nodes[node]['color'] = highlight_color
+        return combined_ego_graph
+    elif service == "ss":
+        paper_ids = ["arxiv:"+ n.metadata["paper_id"] for n in retriever_response]
+        url = 'https://api.semanticscholar.org/graph/v1/paper/batch'
+
+        # Define which details about the paper you would like to receive in the response
+        paper_data_query_params = {'fields': 'references'}
+        G = nx.DiGraph()
+
+        # Send the API request and store the response in a variable
+        response = requests.post(url, params=paper_data_query_params, json={"ids": paper_ids})
+        source_nodes = []
+        if response.status_code == 200:
+            data = response.json()
+            for idx, item in enumerate(data):
+                source_node = PaperNode(
+                    title=retriever_response[idx].metadata["title"],
+                    arxiv_id=retriever_response[idx].metadata["paper_id"]
+                )
+                source_nodes.append(source_node.title)
+                for reference in item["references"]:
+                    target_node = PaperNode(
+                        title=reference["title"],
+                        arxiv_id=reference["paperId"]
+                    )
+                    if source_node.title not in G:
+                        G.add_node(source_node.title, title=str(source_node), arxiv_id=source_node.arxiv_id)
+                    if target_node.title not in G:
+                        G.add_node(target_node.title, title=str(target_node), arxiv_id=target_node.arxiv_id)
+                    G.add_edge(source_node.title, target_node.title)
+            
+            nodes_to_remove = [node for node in G if G.degree(node) < 2]
+
+            # Remove the nodes from the ego graph
+            G.remove_nodes_from(nodes_to_remove)
+            # Assign colors: highlighted nodes in red, others in blue
+            highlight_color = "orange"
+            for node in G.nodes():
+                if node in source_nodes:
+                    G.nodes[node]['color'] = highlight_color
+                    
+            return G
+        else:
+            raise ValueError(f"Request failed with status code {response.status_code}.")
