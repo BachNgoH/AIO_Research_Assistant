@@ -262,7 +262,6 @@ def create_ego_graph(retriever_response: NodeWithScore, service: str = "ss", gra
                         citation_count=reference["citationCount"],
                         abbrv=get_abbreviate_title(reference["title"])
                     )
-                    print(target_node.abbreviation)
                     if source_node.abbreviation not in G:
                         G.add_node(
                             source_node.abbreviation, 
