@@ -89,10 +89,29 @@ def load_paper_search_tool():
             )
             
         combined_ego_graph = create_ego_graph(retriever_response, service="ss", graph=graph)
-        nt = Network(notebook=True, font_color='#10000000')
+        nt = Network(notebook=True)#, font_color='#10000000')
         nt.from_nx(combined_ego_graph)
+        for node in nt.nodes:
+            node['value'] = combined_ego_graph.nodes[node['id']]['size']
+        # Enable physics with specific options
+        nt.toggle_physics(True)
+        nt.set_options("""
+        var options = {
+        "physics": {
+            "forceAtlas2Based": {
+            "gravitationalConstant": -300,
+            "centralGravity": 0.005,
+            "springLength": 230,
+            "springConstant": 0.18
+            },
+            "maxVelocity": 50,
+            "minVelocity": 0.1,
+            "solver": "forceAtlas2Based"
+        }
+        }
+        """)
         nt.save_graph("./outputs/nx_graph.html")
-                
+        
         return retriever_result
             
         

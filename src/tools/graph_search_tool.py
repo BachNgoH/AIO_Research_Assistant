@@ -15,11 +15,15 @@ relationships_dict = {
 class PaperNode:
     title: str
     arxiv_id: str
+    citation_count: int
+    abbreviation: str
+    def __init__(self, title, arxiv_id, citation_count, abbrv):
+        self.title=title
+        self.arxiv_id=arxiv_id
+        self.citation_count=citation_count
+        self.abbreviation=abbrv
+        
     
-    def __init__(self, title, arxiv_id):
-        self.title = title
-        self.arxiv_id = arxiv_id
-
     def __str__(self) -> str:
         return f"Title: {self.title},\n Arxiv ID: {self.arxiv_id}"
 
@@ -38,6 +42,22 @@ class PaperEdge:
         else:
             return f"Category: {self.category}"
 
+def get_abbreviate_title(title):
+    if ":" in title:
+        return title.split(":")[0]
+    # List of common stopwords to exclude from the abbreviation
+    stopwords = set([
+        "a", "an", "the", "and", "or", "but", "if", "while", "with",
+        "of", "at", "by", "for", "to", "in", "on", "over", "under"
+    ])
+    
+    # Split the title into words
+    words = title.split()
+    
+    # Collect the first letter of each significant word (not in stopwords)
+    abbreviation = ''.join([word[0].upper() for word in words if word.lower() not in stopwords])
+    
+    return abbreviation
 
 def find_connected_nodes(graph, node, relationship=None):
     """
@@ -219,7 +239,7 @@ def create_ego_graph(retriever_response: NodeWithScore, service: str = "ss", gra
         url = 'https://api.semanticscholar.org/graph/v1/paper/batch'
 
         # Define which details about the paper you would like to receive in the response
-        paper_data_query_params = {'fields': 'references'}
+        paper_data_query_params = {'fields': 'citationCount,references.title,references.paperId,references.citationCount'}
         G = nx.DiGraph()
 
         # Send the API request and store the response in a variable
@@ -230,19 +250,33 @@ def create_ego_graph(retriever_response: NodeWithScore, service: str = "ss", gra
             for idx, item in enumerate(data):
                 source_node = PaperNode(
                     title=retriever_response[idx].metadata["title"],
-                    arxiv_id=retriever_response[idx].metadata["paper_id"]
+                    arxiv_id=retriever_response[idx].metadata["paper_id"],
+                    citation_count=item["citationCount"],
+                    abbrv=get_abbreviate_title(retriever_response[idx].metadata["title"])
                 )
-                source_nodes.append(source_node.title)
+                source_nodes.append(source_node.abbreviation)
                 for reference in item["references"]:
                     target_node = PaperNode(
                         title=reference["title"],
-                        arxiv_id=reference["paperId"]
+                        arxiv_id=reference["paperId"],
+                        citation_count=reference["citationCount"],
+                        abbrv=get_abbreviate_title(reference["title"])
                     )
-                    if source_node.title not in G:
-                        G.add_node(source_node.title, title=str(source_node), arxiv_id=source_node.arxiv_id)
-                    if target_node.title not in G:
-                        G.add_node(target_node.title, title=str(target_node), arxiv_id=target_node.arxiv_id)
-                    G.add_edge(source_node.title, target_node.title)
+                    print(target_node.abbreviation)
+                    if source_node.abbreviation not in G:
+                        G.add_node(
+                            source_node.abbreviation, 
+                            size=min(100, source_node.citation_count * 10),
+                            title=str(source_node), 
+                            arxiv_id=source_node.arxiv_id, 
+                            )
+                    if target_node.abbreviation not in G:
+                        G.add_node(
+                            target_node.abbreviation, 
+                            title=str(target_node), 
+                            arxiv_id=target_node.arxiv_id, 
+                            size=min(100, target_node.citation_count * 10) if target_node.citation_count is not None else 10)
+                    G.add_edge(source_node.abbreviation, target_node.abbreviation)
             
             nodes_to_remove = [node for node in G if G.degree(node) < 2]
 
@@ -253,7 +287,7 @@ def create_ego_graph(retriever_response: NodeWithScore, service: str = "ss", gra
             for node in G.nodes():
                 if node in source_nodes:
                     G.nodes[node]['color'] = highlight_color
-                    
+
             return trim_graph_by_least_degree(G, 25)
         else:
             raise ValueError(f"Request failed with status code {response.status_code}.")
