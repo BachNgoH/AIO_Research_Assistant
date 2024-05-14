@@ -81,3 +81,10 @@ Comming soon
 ```bash
 sh gen_data.sh
 ``` -->
+
+
+## Upcoming Checklist
+- [ ] Update daily paper
+- [ ] Graph search query engine
+- [ ] UI
+- [ ] Paper/Blog summary mode 
