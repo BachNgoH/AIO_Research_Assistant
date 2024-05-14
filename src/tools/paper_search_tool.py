@@ -20,6 +20,7 @@ from src.constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
 from src.tools.graph_search_tool import load_graph_data, create_ego_graph
 import requests
 import feedparser
+import datetime
 
 simple_content_template = """
 Paper link: {paper_link}
@@ -126,22 +127,37 @@ def load_paper_search_tool():
 
 def load_daily_paper_tool():
     def get_latest_arxiv_papers():
-        max_results=25
-        categories=['cs.AI', 'cs.CV', 'cs.IR', 'cs.LG', 'cs.CL']
+        max_results = 25
+        categories = ['cs.AI', 'cs.CV', 'cs.IR', 'cs.LG', 'cs.CL']
         base_url = 'http://export.arxiv.org/api/query?'
-        all_categories=[f'cat:{category}' for category in categories]
+        all_categories = [f'cat:{category}' for category in categories]
         search_query = '+OR+'.join(all_categories)
-        query = f'search_query={search_query}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
-        response = requests.get(base_url + query)
-        feed = feedparser.parse(response.content)
+        
         paper_list = []
-        for r in feed.entries:
-            paper_list.append(f"""
-Title: {r['title']}
-Link: {r['link']}
-Summary: {r['summary']}
-            """)
+        start = 0
+        today = datetime.utcnow().date()
+        
+        while True:
+            query = f'search_query={search_query}&start={start}&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
+            response = requests.get(base_url + query)
+            feed = feedparser.parse(response.content)
             
+            new_papers_found = True
+            for r in feed.entries:
+                paper_date = datetime.strptime(r['published'][:10], '%Y-%m-%d').date()
+                if paper_date != today:
+                    new_papers_found = False
+                    paper_list.append(f"""
+    Title: {r['title']}
+    Link: {r['link']}
+    Summary: {r['summary']}
+                    """)
+            
+            if not new_papers_found:
+                break
+            
+            start += max_results
+        
         return "\n==============\n".join(paper_list)
     
     return FunctionTool.from_defaults(get_latest_arxiv_papers, description="Useful for getting latest daily papers")
