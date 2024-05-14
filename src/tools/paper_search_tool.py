@@ -18,6 +18,8 @@ from llama_index.core import Settings
 from typing import List, Optional
 from src.constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
 from src.tools.graph_search_tool import load_graph_data, create_ego_graph
+import requests
+import feedparser
 
 simple_content_template = """
 Paper link: {paper_link}
@@ -120,3 +122,26 @@ def load_paper_search_tool():
     #     description="Useful for answering questions related to scientific papers",
     # )
     return FunctionTool.from_defaults(retrieve_paper, description="Useful for answering questions related to scientific papers, add paper year if needed")
+
+
+def load_daily_paper_tool():
+    def get_latest_arxiv_papers():
+        max_results=25
+        categories=['cs.AI', 'cs.CV', 'cs.IR', 'cs.LG', 'cs.CL']
+        base_url = 'http://export.arxiv.org/api/query?'
+        all_categories=[f'cat:{category}' for category in categories]
+        search_query = '+OR+'.join(all_categories)
+        query = f'search_query={search_query}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
+        response = requests.get(base_url + query)
+        feed = feedparser.parse(response.content)
+        paper_list = []
+        for r in feed.entries:
+            paper_list.append(f"""
+Title: {r['title']}
+Link: {r['link']}
+Summary: {r['summary']}
+            """)
+            
+        return "\n==============\n".join(paper_list)
+    
+    return FunctionTool.from_defaults(get_latest_arxiv_papers, description="Useful for getting latest daily papers")

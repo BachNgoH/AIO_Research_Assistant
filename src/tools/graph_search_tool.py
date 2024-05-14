@@ -110,7 +110,6 @@ def find_graph_nodes_from_retriever(graph, retrieved_nodes):
     all_nodes = []
     for r in retrieved_nodes:
         title = r.text.split("\n")[0]
-        print(title)
         nodes = find_nodes_by_keyword(graph, title)
         if len(nodes) > 0:
             all_nodes += nodes
