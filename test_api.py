@@ -18,7 +18,7 @@ base_url = "http://127.0.0.1:8000/v1"  # Example: localhost
 
 # 2. Test /schedule/update (valid)
 update_url = f"{base_url}/schedule/update"
-new_time = "23:09"
+new_time = "01:17"
 time_data = {"new_time": new_time}
 response = requests.post(update_url, json=time_data)
 

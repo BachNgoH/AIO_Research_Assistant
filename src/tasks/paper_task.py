@@ -12,9 +12,18 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.core import Document
-import logging
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
+from src.tasks.report_task import generate_daily_report
+
+def clean_text(x):
+    
+    # Replace newline characters with a space
+    new_text = " ".join([c.strip() for c in x.replace("\n", "").split()])
+    # Remove leading and trailing spaces
+    new_text = new_text.strip()
+    
+    return new_text
 
 
 def get_daily_arxiv_papers():
@@ -40,9 +49,9 @@ def get_daily_arxiv_papers():
             if paper_date >= today - timedelta(1):
                 new_papers_found = True
                 paper_list.append(Document(text=f"""
-Title: {r['title']}
+Title: {clean_text(r['title'])}
 {r['summary']}
-                """, metadata={'paper_id': r['id'].split("/")[-1], 'title': r['title'], 'date': r['published'][:10]}))
+                """, metadata={'paper_id': r['id'].split("/")[-1], 'title': clean_text(r['title']), 'date': r['published'][:10]}))
             else:
                 new_papers_found = False
                 break
@@ -63,7 +72,7 @@ def ingest_paper(arxiv_documents):
         embed_model = OpenAIEmbedding(model=EMBEDDING_MODEL_NAME, api_key=os.environ["OPENAI_API_KEY"])
     else:
         raise NotImplementedError()   
-    logging.info("Embed model loaded successfully.")
+    print("Embed model loaded successfully.")
            
     chroma_client = chromadb.PersistentClient(path="./DB/arxiv")
     chroma_collection = chroma_client.get_or_create_collection("gemma_assistant_arxiv_papers")
@@ -76,7 +85,7 @@ def ingest_paper(arxiv_documents):
     index = VectorStoreIndex.from_documents(
         arxiv_documents, storage_context=storage_context, embed_model=embed_model, show_progress=True
     )
-    logging.info("Indexing successfully.")
+    print("Indexing successfully.")
     
 def daily_ingest_analyze():
     print("Getting papers.")
@@ -84,3 +93,9 @@ def daily_ingest_analyze():
     print(f"Load paper successfully, found {len(arxiv_documents)} papers.")
     
     ingest_paper(arxiv_documents)
+    
+    print("Generating daily report")
+    generate_daily_report(arxiv_documents)
+    
+    
+    

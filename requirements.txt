@@ -16,3 +16,5 @@ fastapi
 easydict==1.9.0
 feedparser==6.0.11
 schedule==1.2.1
+sendgrid
+markdown

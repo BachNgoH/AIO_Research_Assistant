@@ -17,7 +17,7 @@ from llama_index.core.schema import NodeWithScore
 from llama_index.core import Settings
 from typing import List, Optional
 from src.constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
-from src.tools.graph_search_tool import load_graph_data, create_ego_graph
+from src.tools.graph_search_tool import create_ego_graph
 import requests
 import feedparser
 import datetime
