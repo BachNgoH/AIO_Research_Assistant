@@ -58,7 +58,7 @@ def generate_daily_report(paper_list):
         f.write(response.text)
     
     print("Generate Daily Report successfully!")
-    send_daily_report_email(recipient_emails, response.text)
+    send_daily_report_email(recipient_emails, markdown.markdown(response.text))
     print("Send email successfully!")
     
     return response.text
