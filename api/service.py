@@ -6,15 +6,11 @@ from llama_index.llms.gemini import Gemini
 from llama_index.core.agent import AgentRunner
 from llama_index.core import Settings
 from src.tools.paper_search_tool import load_paper_search_tool, load_daily_paper_tool
-from src.tools.code_tool import load_code_tool
 from src.tools.document_tool import load_document_search_tool
 from src.constants import SYSTEM_PROMPT
 from starlette.responses import StreamingResponse, Response
-from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
-from llama_index.core import SimpleDirectoryReader  # pip install llama-index
 from dotenv import load_dotenv
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 import logging
 from src.constants import (
     SERVICE,

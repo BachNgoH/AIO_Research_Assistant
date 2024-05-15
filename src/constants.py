@@ -1,5 +1,5 @@
 from config.config import get_config
-from utils.prompts import DEFAULT_SYSTEM_PROMPT, DEFAULT_USER_PROMPT, DEFAULT_REFINE_PROMPT
+from src.utils.prompts import DEFAULT_SYSTEM_PROMPT, DEFAULT_USER_PROMPT, DEFAULT_REFINE_PROMPT
 
 cfg = get_config('config/config.yaml')
 cfg.merge_from_file('config/postgres.yaml')
