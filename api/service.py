@@ -24,7 +24,7 @@ from src.constants import (
 )
 load_dotenv(override=True)
 
-MODE = "fpt"
+MODE = "normal"
 
 class AssistantService:
     query_engine: AgentRunner
