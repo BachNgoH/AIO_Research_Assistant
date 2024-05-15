@@ -19,7 +19,7 @@ def load_data(source_dir):
 
 def ingest_paper():
     
-    documents = load_data("./data/AIO_Documents/Documents")
+    documents = load_data("./data/FPT_Docs")
     
     if EMBEDDING_SERVICE == "ollama":
         embed_model = OllamaEmbedding(model_name=EMBEDDING_MODEL_NAME)

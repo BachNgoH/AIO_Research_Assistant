@@ -10,8 +10,11 @@ from src.tools.code_tool import load_code_tool
 from src.tools.document_tool import load_document_search_tool
 from src.constants import SYSTEM_PROMPT
 from starlette.responses import StreamingResponse, Response
-
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.llms.openai import OpenAI
+from llama_index.core import SimpleDirectoryReader  # pip install llama-index
 from dotenv import load_dotenv
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 import logging
 from src.constants import (
     SERVICE,
@@ -21,19 +24,22 @@ from src.constants import (
 )
 load_dotenv(override=True)
 
-    
+MODE = "fpt"
 
 class AssistantService:
     query_engine: AgentRunner
     tools_dict: dict
     
     def __init__(self):
+
         self.tools_dict = {
             "paper_search_tool": load_paper_search_tool,
             "daily_paper_tool": load_daily_paper_tool,
             "document_search_tool": load_document_search_tool
         }
         self.query_engine = self.create_query_engine()
+        
+
     
     def create_query_engine(self):
         """
@@ -45,6 +51,38 @@ class AssistantService:
         Returns:
             AgentRunner: An instance of AgentRunner configured with the necessary tools and settings.
         """
+        if MODE == "fpt":
+            from llama_index.core import VectorStoreIndex
+            from llama_index.embeddings.ollama import OllamaEmbedding
+            from llama_index.embeddings.openai import OpenAIEmbedding
+            from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+            from llama_index.vector_stores.chroma import ChromaVectorStore
+            from llama_index.core import StorageContext
+            import chromadb
+
+            from src.constants import DOCUMENT_EMBEDDING_MODEL_NAME, DOCUMENT_EMBEDDING_SERVICE
+            if DOCUMENT_EMBEDDING_SERVICE == "ollama":
+                embed_model = OllamaEmbedding(model_name=DOCUMENT_EMBEDDING_MODEL_NAME)
+            elif DOCUMENT_EMBEDDING_SERVICE == "hf":
+                embed_model = HuggingFaceEmbedding(
+                    model_name=DOCUMENT_EMBEDDING_MODEL_NAME, 
+                    cache_folder="./models", 
+                    embed_batch_size=64)
+            elif DOCUMENT_EMBEDDING_SERVICE == "openai":
+                embed_model = OpenAIEmbedding(
+                    model=DOCUMENT_EMBEDDING_MODEL_NAME, 
+                    api_key=os.environ["OPENAI_API_KEY"])
+            else:
+                raise NotImplementedError() 
+            chroma_client = chromadb.PersistentClient(path="./DB/docs-fpt")
+            chroma_collection = chroma_client.get_or_create_collection("gemma_assistant_fpt_docs")
+            vector_store = ChromaVectorStore(chroma_collection=chroma_collection)    
+            # load the vectorstore
+            storage_context = StorageContext.from_defaults(vector_store=vector_store)
+            paper_index = VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context, embed_model=embed_model)
+            query_engine = paper_index.as_chat_engine(streaming=True)
+            return query_engine
+        
         llm = self.load_model(SERVICE, MODEL_ID)
         Settings.llm = llm
         paper_search_tool = self.tools_dict["paper_search_tool"]()
@@ -104,9 +142,9 @@ class AssistantService:
         """
         # Assuming query_engine is already created or accessible
         if STREAM:
+
             streaming_response = self.query_engine.stream_chat(prompt)
             return StreamingResponse(streaming_response.response_gen, media_type="application/text; charset=utf-8")
         else:
             return Response(self.query_engine.chat(prompt).response, media_type="application/text; charset=utf-8")
-        
         
