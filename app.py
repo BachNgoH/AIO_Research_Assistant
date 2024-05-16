@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from api.controller import router
 from fastapi.middleware.cors import CORSMiddleware
 
-load_dotenv()
+load_dotenv(override=True)
 app = FastAPI()
 
 @app.get("/")

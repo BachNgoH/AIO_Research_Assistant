@@ -1,7 +1,7 @@
 import streamlit as st 
 import requests
 from datetime import datetime
-import json
+import streamlit.components.v1 as components
 
 
 # emojis: https://www.webfx.com/tools/emoji-cheat-sheet/
@@ -11,11 +11,18 @@ st.set_page_config(page_title="localbot", page_icon="🧑‍💼", layout="wide"
 def send_query(text, api_key=None):
     headers = {"Content-Type": "application/json"}
     data={"message": text, "api_key": api_key}
-    resp = requests.post("http://localhost:8000/v1/complete", json=data, headers=headers , stream=True)
+    resp = requests.post("http://localhost:8008/v1/complete", json=data, headers=headers , stream=True)
     return resp
 
 def run_app(username):
     st.sidebar.header("API Settings")
+    # with st.sidebar:
+
+    #     graph_cache_file = './outputs/nx_graph.html'
+        
+    #     HtmlFile = open(graph_cache_file, 'r', encoding='utf-8')
+    #     source_code = HtmlFile.read()
+    #     components.html(source_code, height = 500, width=500)
     # api_key = st.sidebar.text_input("Enter Groq API Key", key="api_key", type="password")
     
     # col1, col2 = st.columns([2, 1])
@@ -60,7 +67,14 @@ def run_app(username):
         # data = res.json()
         # answer = data["completion"]
         # links = data.get("sources", [])
+        with st.sidebar:
 
+            graph_cache_file = './outputs/nx_graph.html'
+            
+            HtmlFile = open(graph_cache_file, 'r', encoding='utf-8')
+            source_code = HtmlFile.read()
+            components.html(source_code, height = 500, width=500)
+            
         with st.chat_message("assistant"):
             # Create a placeholder for streaming messages
             message_placeholder = st.empty()
@@ -77,6 +91,7 @@ def run_app(username):
                 # except:
                     # continue
             message_placeholder.markdown(full_response)
+
         st.session_state.messages.append(
             {"role": "assistant", "content": full_response}
         )        

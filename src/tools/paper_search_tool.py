@@ -1,7 +1,9 @@
 import os
 import torch
 import chromadb
-from llama_index.core import VectorStoreIndex, get_response_synthesizer
+import networkx as nx
+from pyvis.network import Network
+from llama_index.core import VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import StorageContext
@@ -15,7 +17,10 @@ from llama_index.core.schema import NodeWithScore
 from llama_index.core import Settings
 from typing import List, Optional
 from src.constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
-
+from src.tools.graph_search_tool import create_ego_graph
+import requests
+import feedparser
+import datetime
 
 simple_content_template = """
 Paper link: {paper_link}
@@ -60,9 +65,12 @@ def load_paper_search_tool():
     paper_index = VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context, embed_model=embed_model)
     Settings.llm = None
     paper_retriever = paper_index.as_retriever(
-        similarity_top_k=20,    
+        similarity_top_k=10,    
     )
     node_postporcessor = PaperYearNodePostprocessor()
+    
+    # graph = load_graph_data()
+    graph = None
     
     def retrieve_paper(query_str: str, year: str = "None"):
         query_str = f"{year}\n{query_str}"
@@ -82,6 +90,31 @@ def load_paper_search_tool():
                     paper_content=paper_content
                 )
             )
+            
+        combined_ego_graph = create_ego_graph(retriever_response, service="ss", graph=graph)
+        nt = Network(notebook=True)#, font_color='#10000000')
+        nt.from_nx(combined_ego_graph)
+        for node in nt.nodes:
+            node['value'] = combined_ego_graph.nodes[node['id']]['size']
+        # Enable physics with specific options
+        # nt.toggle_physics(True)
+        # nt.set_options("""
+        # var options = {
+        # "physics": {
+        #     "forceAtlas2Based": {
+        #     "gravitationalConstant": -300,
+        #     "centralGravity": 0.005,
+        #     "springLength": 230,
+        #     "springConstant": 0.18
+        #     },
+        #     "maxVelocity": 50,
+        #     "minVelocity": 0.1,
+        #     "solver": "forceAtlas2Based"
+        # }
+        # }
+        # """)
+        nt.save_graph("./outputs/nx_graph.html")
+        
         return retriever_result
             
         
@@ -90,3 +123,41 @@ def load_paper_search_tool():
     #     description="Useful for answering questions related to scientific papers",
     # )
     return FunctionTool.from_defaults(retrieve_paper, description="Useful for answering questions related to scientific papers, add paper year if needed")
+
+
+def load_daily_paper_tool():
+    def get_latest_arxiv_papers():
+        max_results = 25
+        categories = ['cs.AI', 'cs.CV', 'cs.IR', 'cs.LG', 'cs.CL']
+        base_url = 'http://export.arxiv.org/api/query?'
+        all_categories = [f'cat:{category}' for category in categories]
+        search_query = '+OR+'.join(all_categories)
+        
+        paper_list = []
+        start = 0
+        today = datetime.utcnow().date()
+        
+        while True:
+            query = f'search_query={search_query}&start={start}&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
+            response = requests.get(base_url + query)
+            feed = feedparser.parse(response.content)
+            
+            new_papers_found = True
+            for r in feed.entries:
+                paper_date = datetime.strptime(r['published'][:10], '%Y-%m-%d').date()
+                if paper_date != today:
+                    new_papers_found = False
+                    paper_list.append(f"""
+    Title: {r['title']}
+    Link: {r['link']}
+    Summary: {r['summary']}
+                    """)
+            
+            if not new_papers_found:
+                break
+            
+            start += max_results
+        
+        return "\n==============\n".join(paper_list)
+    
+    return FunctionTool.from_defaults(get_latest_arxiv_papers, description="Useful for getting latest daily papers")
