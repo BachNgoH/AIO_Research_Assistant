@@ -20,7 +20,7 @@ from src.constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
 from src.tools.graph_search_tool import create_ego_graph
 import requests
 import feedparser
-import datetime
+from datetime import datetime
 
 simple_content_template = """
 Paper link: {paper_link}

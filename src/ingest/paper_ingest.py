@@ -15,7 +15,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
 tqdm.pandas()
 
-device_type = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device_type = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_data():
     
@@ -70,7 +70,7 @@ def ingest_paper():
     if EMBEDDING_SERVICE == "ollama":
         embed_model = OllamaEmbedding(model_name=EMBEDDING_MODEL_NAME)
     elif EMBEDDING_SERVICE == "hf":
-        embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL_NAME, cache_folder="./models", device=device_type, embed_batch_size=64)
+        embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL_NAME, cache_folder="./models", device=device_type, embed_batch_size=10)
     elif EMBEDDING_SERVICE == "openai":
         embed_model = OpenAIEmbedding(model=EMBEDDING_MODEL_NAME, api_key=os.environ["OPENAI_API_KEY"])
     else:
