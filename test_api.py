@@ -4,7 +4,7 @@ from datetime import time
 
 
 # Base URL (replace with your actual API URL)
-base_url = "http://127.0.0.1:8000/v1"  # Example: localhost
+base_url = "http://127.0.0.1:8004/v1"  # Example: localhost
 
 # 1. Test /complete endpoint
 # complete_url = f"{base_url}/complete"
@@ -18,7 +18,7 @@ base_url = "http://127.0.0.1:8000/v1"  # Example: localhost
 
 # 2. Test /schedule/update (valid)
 update_url = f"{base_url}/schedule/update"
-new_time = "01:24"
+new_time = "21:00"
 time_data = {"new_time": new_time}
 response = requests.post(update_url, json=time_data)
 

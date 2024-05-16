@@ -2,7 +2,7 @@ import os
 from llama_index.core.schema import MetadataMode 
 from llama_index.llms.gemini import Gemini
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 import sendgrid
 import time
 from sendgrid.helpers.mail import Mail, Email, Content, To
@@ -17,7 +17,14 @@ Give the link to the full paper in the report.
 {daily_paper_content}
 """
 
-recipient_emails = ["nlmbao2015@gmail.com", "ngohoangbach2004@gmail.com", "ngohoangbach4008@gmail.com"]
+recipient_emails = [
+    "nlmbao2015@gmail.com", 
+    "trinhxuankhai2310@gmail.com", 
+    "ngotrisi2004@gmail.com",
+    "dinhquangvinh77@gmail.com",
+    "anminhhung99@gmail.com",
+    "ntakhoa.hcmut@gmail.com"
+]
 
 def send_daily_report_email(recipients, report_content):
     """Sends the generated daily report to a list of email recipients."""
@@ -40,6 +47,7 @@ def generate_daily_report(paper_list):
     today = datetime.today()  # Get the current date and time
 
     # Format the date as a string
+    today = today - timedelta(days=1)
     date = today.strftime("%Y-%m-%d")  # YYYY-MM-DD format
 
     daily_paper_content = "\n===============\n".join([paper.get_content(MetadataMode.LLM) for paper in paper_list])
@@ -55,6 +63,9 @@ def generate_daily_report(paper_list):
         
         
     with open(f"./outputs/daily_report_{date}.md", "w") as f:
+        f.write(response.text)
+        
+    with open(f"/media/gb2t/Data/DailyAIReports/daily_reports/daily_report_{date}.md", "w") as f:
         f.write(response.text)
     
     print("Generate Daily Report successfully!")

@@ -1,8 +1,6 @@
 import streamlit as st 
 import requests
 from datetime import datetime
-import json
-import os
 import streamlit.components.v1 as components
 
 
@@ -13,7 +11,7 @@ st.set_page_config(page_title="localbot", page_icon="🧑‍💼", layout="wide"
 def send_query(text, api_key=None):
     headers = {"Content-Type": "application/json"}
     data={"message": text, "api_key": api_key}
-    resp = requests.post("http://localhost:8000/v1/complete", json=data, headers=headers , stream=True)
+    resp = requests.post("http://localhost:8008/v1/complete", json=data, headers=headers , stream=True)
     return resp
 
 def run_app(username):
