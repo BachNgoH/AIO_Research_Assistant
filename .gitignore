@@ -5,3 +5,4 @@ DB/*
 venv/*
 .env
 __pycache__
+lib/*
