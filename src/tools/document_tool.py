@@ -3,6 +3,7 @@ import torch
 import json
 import chromadb
 import requests
+import urllib.parse
 from typing import Optional
 import dotenv
 from llama_index.core import VectorStoreIndex
@@ -75,7 +76,7 @@ def load_document_search_tool():
             
             document_link = f"https://github.com/BachNgoH/AIO_Documents/tree/main/Documents/{file_name}"
             n.node.text = simple_content_template.format(
-                    paper_link=document_link, 
+                    paper_link=urllib.parse.quote(document_link), 
                     paper_content=paper_content
             )
             

@@ -12,6 +12,8 @@ from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.core import Document
 from tqdm import tqdm
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+
 from constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
 tqdm.pandas()
 

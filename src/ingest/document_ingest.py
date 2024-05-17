@@ -9,6 +9,8 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.core import SimpleDirectoryReader
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+
 from constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
 
 device_type = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

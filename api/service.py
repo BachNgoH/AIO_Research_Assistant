@@ -9,6 +9,8 @@ from src.agents.gemini_agent import GeminiForFunctionCalling
 from llama_index.core import Settings
 from src.tools.paper_search_tool import load_paper_search_tool, load_daily_paper_tool, load_get_time_tool
 from src.tools.document_tool import load_document_search_tool
+from src.tools.web_search_tool import load_web_search_tool
+from src.tools.info_tool import load_info_aio_tool
 from src.constants import SYSTEM_PROMPT
 from starlette.responses import StreamingResponse, Response
 from llama_index.llms.openai import OpenAI
@@ -28,12 +30,6 @@ class AssistantService:
     tools_dict: dict
     
     def __init__(self):
-
-        self.tools_dict = {
-            "paper_search_tool": load_paper_search_tool,
-            "daily_paper_tool": load_daily_paper_tool,
-            "document_search_tool": load_document_search_tool
-        }
         self.query_engine = self.create_query_engine()
         
     def load_tools(self):
@@ -41,7 +37,9 @@ class AssistantService:
         document_search_tool = load_document_search_tool()
         # daily_paper_tool = load_daily_paper_tool()
         get_time_tool = load_get_time_tool()
-        return [paper_search_tool, document_search_tool, get_time_tool]
+        web_search_tool = load_web_search_tool()
+        aio_info_tool = load_info_aio_tool()
+        return [paper_search_tool, document_search_tool, get_time_tool, web_search_tool, aio_info_tool]
     
     def create_query_engine(self):
         """

@@ -72,6 +72,10 @@ def load_web_search_tool():
     )
     
     def search_web(query_str: str):
+        """
+        Search the internet for information on a given query
+        
+        """
         
         web_search_results = web_search_function(query_str)
             
