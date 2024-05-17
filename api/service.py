@@ -4,8 +4,10 @@ from llama_index.llms.openai import OpenAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.gemini import Gemini
 from llama_index.core.agent import AgentRunner
+from llama_index.agent.llm_compiler.step import LLMCompilerAgentWorker
+from src.agents.assistant_agent import AssistantAgent
 from llama_index.core import Settings
-from src.tools.paper_search_tool import load_paper_search_tool, load_daily_paper_tool
+from src.tools.paper_search_tool import load_paper_search_tool, load_daily_paper_tool, load_get_time_tool
 from src.tools.document_tool import load_document_search_tool
 from src.constants import SYSTEM_PROMPT
 from starlette.responses import StreamingResponse, Response
@@ -35,7 +37,12 @@ class AssistantService:
         }
         self.query_engine = self.create_query_engine()
         
-
+    def load_tools(self):
+        paper_search_tool = load_paper_search_tool()
+        document_search_tool = load_document_search_tool()
+        # daily_paper_tool = load_daily_paper_tool()
+        get_time_tool = load_get_time_tool()
+        return [paper_search_tool, document_search_tool, get_time_tool]
     
     def create_query_engine(self):
         """
@@ -81,20 +88,15 @@ class AssistantService:
         
         llm = self.load_model(SERVICE, MODEL_ID)
         Settings.llm = llm
-        paper_search_tool = self.tools_dict["paper_search_tool"]()
-        document_search_tool = self.tools_dict["document_search_tool"]()
-        daily_paper_tool = self.tools_dict["daily_paper_tool"]()
+        tools = self.load_tools()
         
-        query_engine = AgentRunner.from_llm(
-            tools=[
-                document_search_tool,
-                paper_search_tool,
-                daily_paper_tool
-            ],
+        query_engine = AssistantAgent.from_tools(
+            tools=tools,
             verbose=True,
             llm=llm,
             system_prompt = SYSTEM_PROMPT
         )
+        
         return query_engine
     
     def load_model(self, service, model_id):
@@ -138,9 +140,12 @@ class AssistantService:
         """
         # Assuming query_engine is already created or accessible
         if STREAM:
-
+            # self.query_engine.memory.reset()
             streaming_response = self.query_engine.stream_chat(prompt)
+            
             return StreamingResponse(streaming_response.response_gen, media_type="application/text; charset=utf-8")
+            # return StreamingResponse(streaming_response.response_gen, media_type="application/text; charset=utf-8")
+            
         else:
             return Response(self.query_engine.chat(prompt).response, media_type="application/text; charset=utf-8")
         

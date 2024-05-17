@@ -86,19 +86,19 @@ def load_document_search_tool():
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     paper_index = VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context, embed_model=embed_model)
 
-    paper_retriever = paper_index.as_retriever(
-        similarity_top_k=8,
+    concept_retriever = paper_index.as_retriever(
+        similarity_top_k=3,
     )
     
     rerank_postprocessor = SentenceTransformerRerank(
         model='mixedbread-ai/mxbai-rerank-xsmall-v1',
-        top_n=5, # number of nodes after re-ranking, 
+        top_n=3, # number of nodes after re-ranking, 
         keep_retrieval_score=True
     )
     
     def retrieve_ai_concepts(query_str: str):
         
-        retriever_response =  paper_retriever.retrieve(query_str)
+        retriever_response =  concept_retriever.retrieve(query_str)
         web_search_results = web_search_function(query_str)
         # retriever_result = []
         for n in retriever_response:
@@ -112,11 +112,12 @@ def load_document_search_tool():
                     paper_content=paper_content
             )
             
-        retriever_response += web_search_results
-        retriever_result = rerank_postprocessor.postprocess_nodes(
-            retriever_response,
+        web_search_results = rerank_postprocessor.postprocess_nodes(
+            web_search_results,
             query_str=query_str
         )
+        retriever_result = retriever_response + web_search_results 
+
         return retriever_result
             
         

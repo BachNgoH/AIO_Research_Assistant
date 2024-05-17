@@ -65,7 +65,7 @@ def load_paper_search_tool():
     paper_index = VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context, embed_model=embed_model)
     Settings.llm = None
     paper_retriever = paper_index.as_retriever(
-        similarity_top_k=10,    
+        similarity_top_k=5,    
     )
     node_postporcessor = PaperYearNodePostprocessor()
     
@@ -73,6 +73,16 @@ def load_paper_search_tool():
     graph = None
     
     def retrieve_paper(query_str: str, year: str = "None"):
+        """
+        Retrieves papers based on the given query string and optional year.
+
+        Args:
+            query_str (str): The query string used to search for papers.
+            year (str, optional): The year of the papers to retrieve. Defaults to "None".
+
+        Returns:
+            list: A list of retrieved papers, each containing the paper link and content.
+        """
         query_str = f"{year}\n{query_str}"
         retriever_response =  node_postporcessor.postprocess_nodes(
             paper_retriever.retrieve(query_str), 
@@ -96,23 +106,7 @@ def load_paper_search_tool():
         nt.from_nx(combined_ego_graph)
         for node in nt.nodes:
             node['value'] = combined_ego_graph.nodes[node['id']]['size']
-        # Enable physics with specific options
-        # nt.toggle_physics(True)
-        # nt.set_options("""
-        # var options = {
-        # "physics": {
-        #     "forceAtlas2Based": {
-        #     "gravitationalConstant": -300,
-        #     "centralGravity": 0.005,
-        #     "springLength": 230,
-        #     "springConstant": 0.18
-        #     },
-        #     "maxVelocity": 50,
-        #     "minVelocity": 0.1,
-        #     "solver": "forceAtlas2Based"
-        # }
-        # }
-        # """)
+
         nt.save_graph("./outputs/nx_graph.html")
         
         return retriever_result
@@ -161,3 +155,14 @@ def load_daily_paper_tool():
         return "\n==============\n".join(paper_list)
     
     return FunctionTool.from_defaults(get_latest_arxiv_papers, description="Useful for getting latest daily papers")
+
+
+def load_get_time_tool():
+
+    def get_current_time():
+        """
+        Returns the current time in the format: "YYYY-MM-DD HH:MM:SS".
+        """
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    return FunctionTool.from_defaults(get_current_time)
