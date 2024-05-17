@@ -30,39 +30,6 @@ Link: {search_link}
 Content: {search_content}
 """
 
-def search_output_parser(response):
-    contents = response["organic"]
-    web_search_results = []
-    for content in contents:
-        title = content["title"]
-        link = content["link"]
-        snippet = content["snippet"]
-        web_search_results.append(
-            NodeWithScore(
-                node=Document(text=simple_web_search_template.format(
-                    title=title, 
-                    search_link=link, 
-                    search_content=snippet)
-                ),
-                score=1
-            ))
-    return web_search_results
-
-def web_search_function(query, location: Optional[str] = None):
-    url = "https://google.serper.dev/search"
-    payload = json.dumps({
-        "q": query,
-        # "gl": location
-    })
-    headers = {
-        'X-API-KEY': os.getenv('SERPER_API_KEY'),
-        'Content-Type': 'application/json'
-    }
-
-    response = requests.request("POST", url, headers=headers, data=payload)
-    return search_output_parser(response.json())
-
-
 def load_document_search_tool():
     device_type = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
     if DOCUMENT_EMBEDDING_SERVICE == "ollama":
@@ -87,20 +54,20 @@ def load_document_search_tool():
     paper_index = VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context, embed_model=embed_model)
 
     concept_retriever = paper_index.as_retriever(
-        similarity_top_k=3,
+        similarity_top_k=10,
     )
     
-    rerank_postprocessor = SentenceTransformerRerank(
-        model='mixedbread-ai/mxbai-rerank-xsmall-v1',
-        top_n=3, # number of nodes after re-ranking, 
-        keep_retrieval_score=True
-    )
+    # rerank_postprocessor = SentenceTransformerRerank(
+    #     model='mixedbread-ai/mxbai-rerank-xsmall-v1',
+    #     top_n=5, # number of nodes after re-ranking, 
+    #     keep_retrieval_score=True
+    # )
     
     def retrieve_ai_concepts(query_str: str):
         
         retriever_response =  concept_retriever.retrieve(query_str)
-        web_search_results = web_search_function(query_str)
-        # retriever_result = []
+        
+        retriever_result = []
         for n in retriever_response:
             file_name = n.node.metadata["file_name"]
             # paper_id = list(n.node.relationships.items())[0][1].node_id
@@ -112,11 +79,7 @@ def load_document_search_tool():
                     paper_content=paper_content
             )
             
-        web_search_results = rerank_postprocessor.postprocess_nodes(
-            web_search_results,
-            query_str=query_str
-        )
-        retriever_result = retriever_response + web_search_results 
+            retriever_result.append(n.node.text)
 
         return retriever_result
             

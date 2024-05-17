@@ -1,8 +1,8 @@
 MODEL:  
   TEMPERATURE: 0.2
-  STREAM: False
+  STREAM: True
 
-  SERVICE: groq # [ ollama, openai, groq, gemini ] 
+  SERVICE: openai # [ ollama, openai, groq, gemini ] 
 
   EMBEDDING_MODEL_NAME: "mixedbread-ai/mxbai-embed-large-v1" # "intfloat/multilingual-e5-large" #=> 51 #"Salesforce/SFR-Embedding-Mistral" =>58 # "intfloat/e5-mistral-7b-instruct" => 56.89
   EMBEDDING_SERVICE: "hf" # ["hf", "ollama", openai] # default hf
@@ -11,5 +11,5 @@ MODEL:
   # DOCUMENT_EMBEDDING_MODEL_NAME: "text-embedding-3-small"
   DOCUMENT_EMBEDDING_SERVICE: "hf" # ["hf", "ollama", openai] # default hf
 
-  # MODEL_ID: models/gemini-1.5-flash-latest
-  MODEL_ID: "llama3-70b-8192"
+  MODEL_ID: gpt-3.5-turbo
+  # MODEL_ID: "llama3-70b-8192"

@@ -27,7 +27,7 @@ def clean_text(x):
 
 
 def get_daily_arxiv_papers():
-    max_results = 25
+    max_results = 800
     categories = ['cs.AI', 'cs.CV', 'cs.IR', 'cs.LG', 'cs.CL']
     base_url = 'http://export.arxiv.org/api/query?'
     all_categories = [f'cat:{category}' for category in categories]

@@ -118,7 +118,7 @@ class AssistantService:
             # self.query_engine.memory.reset()
             streaming_response = self.query_engine.stream_chat(prompt)
             
-            return StreamingResponse(streaming_response, media_type="application/text; charset=utf-8")
+            return StreamingResponse(streaming_response.response_gen, media_type="application/text; charset=utf-8")
             # return StreamingResponse(streaming_response.response_gen, media_type="application/text; charset=utf-8")
             
         else:
