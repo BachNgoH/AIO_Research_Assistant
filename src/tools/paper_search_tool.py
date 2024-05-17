@@ -17,8 +17,6 @@ from llama_index.core import Settings
 from typing import List, Optional
 from src.constants import EMBEDDING_MODEL_NAME, EMBEDDING_SERVICE
 from src.tools.graph_search_tool import create_ego_graph
-import requests
-import feedparser
 from datetime import datetime
 
 simple_content_template = """

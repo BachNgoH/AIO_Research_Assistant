@@ -2,6 +2,7 @@ import os
 import chromadb
 import sys
 import torch
+from llama_parse import LlamaParse
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
@@ -31,14 +32,23 @@ def load_general_info():
     chroma_client = chromadb.PersistentClient("./DB/general_info")
     general_info_collection = chroma_client.create_collection("general_info")
 
+    parser_gpt4o = LlamaParse(
+        result_type="markdown",
+        # base_url="https://api.staging.llamaindex.ai",
+        api_key=os.environ["LLAMA_PARSE_API_KEY"],
+        gpt4o_mode=True,
+        gpt4o_api_key=os.environ["OPENAI_API_KEY"]
+    )
+    
     documents = SimpleDirectoryReader(
-        "./data/general_info"
+        "./data/General_Documents",
+        file_extractor={".pdf": parser_gpt4o}
     ).load_data()
 
     vector_store = ChromaVectorStore(chroma_collection=general_info_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
-    index = VectorStoreIndex.from_documents(
+    VectorStoreIndex.from_documents(
         documents, storage_context=storage_context, embed_model=embed_model
     )
 

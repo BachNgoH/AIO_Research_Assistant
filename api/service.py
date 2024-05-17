@@ -4,6 +4,7 @@ from llama_index.llms.openai import OpenAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.gemini import Gemini
 from llama_index.core.agent import AgentRunner
+from llama_index.agent.openai import OpenAIAgent
 from src.agents.assistant_agent import AssistantAgent
 from src.agents.gemini_agent import GeminiForFunctionCalling
 from llama_index.core import Settings
@@ -70,7 +71,7 @@ class AssistantService:
                 temperature=TEMPERATURE
             )
         else:
-            query_engine = AssistantAgent.from_tools(
+            query_engine = OpenAIAgent.from_tools(
                 tools=tools,
                 verbose=True,
                 llm=llm,

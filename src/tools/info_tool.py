@@ -14,7 +14,7 @@ from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core import VectorStoreIndex, StorageContext
 
-load_dotenv()
+load_dotenv(override=True)
 OPENAI_API_KEY = os.getenv("OPENAI_KEY")
 
 simple_content_template = """
