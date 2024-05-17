@@ -19,11 +19,11 @@ Give the link to the full paper in the report.
 
 recipient_emails = [
     "nlmbao2015@gmail.com", 
-    "trinhxuankhai2310@gmail.com", 
-    "ngotrisi2004@gmail.com",
-    "dinhquangvinh77@gmail.com",
-    "anminhhung99@gmail.com",
-    "ntakhoa.hcmut@gmail.com"
+    # "trinhxuankhai2310@gmail.com", 
+    # "ngotrisi2004@gmail.com",
+    # "dinhquangvinh77@gmail.com",
+    # "anminhhung99@gmail.com",
+    # "ntakhoa.hcmut@gmail.com"
 ]
 
 def send_daily_report_email(recipients, report_content):

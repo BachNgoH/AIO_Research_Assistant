@@ -109,14 +109,16 @@ def load_paper_search_tool():
 
         nt.save_graph("./outputs/nx_graph.html")
         
-        return retriever_result
+        return "\n================\n".join(retriever_result)
             
         
     # paper_search_tool = QueryEngineTool.from_defaults(
     #     query_engine=paper_query_engine,
     #     description="Useful for answering questions related to scientific papers",
     # )
-    return FunctionTool.from_defaults(retrieve_paper, description="Useful for answering questions related to scientific papers, add paper year if needed")
+    return FunctionTool.from_defaults(
+        retrieve_paper, 
+        description="Useful for answering questions related to scientific papers, add paper year if needed")
 
 
 def load_daily_paper_tool():

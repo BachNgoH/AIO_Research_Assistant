@@ -4,8 +4,8 @@ from llama_index.llms.openai import OpenAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.gemini import Gemini
 from llama_index.core.agent import AgentRunner
-from llama_index.agent.llm_compiler.step import LLMCompilerAgentWorker
 from src.agents.assistant_agent import AssistantAgent
+from src.agents.gemini_agent import GeminiForFunctionCalling
 from llama_index.core import Settings
 from src.tools.paper_search_tool import load_paper_search_tool, load_daily_paper_tool, load_get_time_tool
 from src.tools.document_tool import load_document_search_tool
@@ -22,7 +22,6 @@ from src.constants import (
 )
 load_dotenv(override=True)
 
-MODE = "normal"
 
 class AssistantService:
     query_engine: AgentRunner
@@ -54,48 +53,24 @@ class AssistantService:
         Returns:
             AgentRunner: An instance of AgentRunner configured with the necessary tools and settings.
         """
-        if MODE == "fpt":
-            from llama_index.core import VectorStoreIndex
-            from llama_index.embeddings.ollama import OllamaEmbedding
-            from llama_index.embeddings.openai import OpenAIEmbedding
-            from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-            from llama_index.vector_stores.chroma import ChromaVectorStore
-            from llama_index.core import StorageContext
-            import chromadb
-
-            from src.constants import DOCUMENT_EMBEDDING_MODEL_NAME, DOCUMENT_EMBEDDING_SERVICE
-            if DOCUMENT_EMBEDDING_SERVICE == "ollama":
-                embed_model = OllamaEmbedding(model_name=DOCUMENT_EMBEDDING_MODEL_NAME)
-            elif DOCUMENT_EMBEDDING_SERVICE == "hf":
-                embed_model = HuggingFaceEmbedding(
-                    model_name=DOCUMENT_EMBEDDING_MODEL_NAME, 
-                    cache_folder="./models", 
-                    embed_batch_size=64)
-            elif DOCUMENT_EMBEDDING_SERVICE == "openai":
-                embed_model = OpenAIEmbedding(
-                    model=DOCUMENT_EMBEDDING_MODEL_NAME, 
-                    api_key=os.environ["OPENAI_API_KEY"])
-            else:
-                raise NotImplementedError() 
-            chroma_client = chromadb.PersistentClient(path="./DB/docs-fpt")
-            chroma_collection = chroma_client.get_or_create_collection("gemma_assistant_fpt_docs")
-            vector_store = ChromaVectorStore(chroma_collection=chroma_collection)    
-            # load the vectorstore
-            storage_context = StorageContext.from_defaults(vector_store=vector_store)
-            paper_index = VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context, embed_model=embed_model)
-            query_engine = paper_index.as_chat_engine(streaming=True)
-            return query_engine
         
         llm = self.load_model(SERVICE, MODEL_ID)
         Settings.llm = llm
         tools = self.load_tools()
         
-        query_engine = AssistantAgent.from_tools(
-            tools=tools,
-            verbose=True,
-            llm=llm,
-            system_prompt = SYSTEM_PROMPT
-        )
+        if SERVICE == "gemini":
+            query_engine = GeminiForFunctionCalling(
+                tools=tools,
+                api_key=os.getenv("GOOGLE_API_KEY"),
+                temperature=TEMPERATURE
+            )
+        else:
+            query_engine = AssistantAgent.from_tools(
+                tools=tools,
+                verbose=True,
+                llm=llm,
+                system_prompt = SYSTEM_PROMPT
+            )
         
         return query_engine
     
@@ -143,7 +118,7 @@ class AssistantService:
             # self.query_engine.memory.reset()
             streaming_response = self.query_engine.stream_chat(prompt)
             
-            return StreamingResponse(streaming_response.response_gen, media_type="application/text; charset=utf-8")
+            return StreamingResponse(streaming_response, media_type="application/text; charset=utf-8")
             # return StreamingResponse(streaming_response.response_gen, media_type="application/text; charset=utf-8")
             
         else:

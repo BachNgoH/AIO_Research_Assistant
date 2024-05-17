@@ -12,7 +12,7 @@ assistant = AssistantService()
 
 # --- Scheduled Task Logic ---
 
-execution_time = "10:59"  # Default: 10:59 AM +7 
+execution_time = "22:02"  # Default: 10:59 AM +7 
 
 def run_scheduled_task():
     print("Scheduled ingestion started!")
