@@ -1,7 +1,6 @@
 import os
 import torch
 import chromadb
-import networkx as nx
 from pyvis.network import Network
 from llama_index.core import VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding

@@ -82,7 +82,7 @@ def ingest_paper(arxiv_documents):
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     
-    index = VectorStoreIndex.from_documents(
+    VectorStoreIndex.from_documents(
         arxiv_documents, storage_context=storage_context, embed_model=embed_model, show_progress=True
     )
     print("Indexing successfully.")

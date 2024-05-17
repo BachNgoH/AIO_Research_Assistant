@@ -57,7 +57,7 @@ def generate_daily_report(paper_list):
     try:
         response = gemini_llm.complete(prompt)
         
-    except Exception as e:
+    except Exception as _:
         time.sleep(120)
         response = gemini_llm.complete(prompt)
         

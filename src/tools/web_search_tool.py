@@ -1,21 +1,12 @@
 import os
-import torch
 import json
-import chromadb
 import requests
 from typing import Optional
 import dotenv
-from llama_index.core import VectorStoreIndex
-from llama_index.embeddings.ollama import OllamaEmbedding
-from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core import StorageContext
 from llama_index.core.schema import MetadataMode
 from llama_index.core.tools import FunctionTool
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.schema import NodeWithScore, Document
-from src.constants import DOCUMENT_EMBEDDING_MODEL_NAME, DOCUMENT_EMBEDDING_SERVICE
 
 dotenv.load_dotenv(override=True)
 
