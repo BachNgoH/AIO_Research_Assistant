@@ -36,6 +36,7 @@ async def complete_text(request: Request):
     response = assistant.predict(message)
     return response
 
+# Update the schedule time
 @router.post("/schedule/update")
 async def update_schedule(request: Request):
     data = await request.json()
@@ -55,9 +56,23 @@ async def update_schedule(request: Request):
     except ValueError:  # Catch any errors from invalid time values
         return {"error": "Invalid time format. Use HH:MM (e.g., 09:30)"}
 
+# Enable or disable the schedule
+@router.post("/schedule/enable")
+async def enable_schedule(request: Request):
+    data = await request.json()
+    enable = data.get("enable", True)
+    if enable:
+        asyncio.create_task(schedule_task())  # Restart scheduling
+        return {"message": "Schedule enabled"}
+    else:
+        schedule.clear()  # Clear existing schedule
+        return {"message": "Schedule disabled"}
+
+# Get the current execution time
 @router.get("/schedule")
 def get_schedule():
     return {"execution_time": execution_time}
+
 
 # --- Startup ---
 @router.on_event("startup")
