@@ -122,39 +122,29 @@ def load_paper_search_tool():
 
 def load_daily_paper_tool():
     def get_latest_arxiv_papers():
-        max_results = 25
-        categories = ['cs.AI', 'cs.CV', 'cs.IR', 'cs.LG', 'cs.CL']
-        base_url = 'http://export.arxiv.org/api/query?'
-        all_categories = [f'cat:{category}' for category in categories]
-        search_query = '+OR+'.join(all_categories)
         
-        paper_list = []
-        start = 0
-        today = datetime.utcnow().date()
-        
-        while True:
-            query = f'search_query={search_query}&start={start}&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
-            response = requests.get(base_url + query)
-            feed = feedparser.parse(response.content)
+        # Directory path
+        directory = './outputs/DailyAIReports/daily_reports'
+
+        # List all files in the directory
+        files = os.listdir(directory)
+
+        # Extract and convert dates to datetime objects
+        file_dates = [(file, datetime.strptime(file.split('_')[-1].split(".")[0], '%Y-%m-%d')) for file in files]
+
+        # Sort files based on date in descending order
+        sorted_files = sorted(file_dates, key=lambda x: x[1], reverse=True)
+
+
+        # Get the latest file
+        latest_file = sorted_files[0][0]
+
+        with open(os.path.join(directory, latest_file), 'r') as file:
+            md_content = file.read()
             
-            new_papers_found = True
-            for r in feed.entries:
-                paper_date = datetime.strptime(r['published'][:10], '%Y-%m-%d').date()
-                if paper_date != today:
-                    new_papers_found = False
-                    paper_list.append(f"""
-    Title: {r['title']}
-    Link: {r['link']}
-    Summary: {r['summary']}
-                    """)
             
-            if not new_papers_found:
-                break
+        return f"Report Link: https://github.com/BachNgoH/DailyAIReports/blob/main/daily_reports/{latest_file.split('/')[-1]}\n{md_content}"
             
-            start += max_results
-        
-        return "\n==============\n".join(paper_list)
-    
     return FunctionTool.from_defaults(get_latest_arxiv_papers, description="Useful for getting latest daily papers")
 
 

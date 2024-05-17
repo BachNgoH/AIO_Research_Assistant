@@ -35,11 +35,18 @@ class AssistantService:
     def load_tools(self):
         paper_search_tool = load_paper_search_tool()
         document_search_tool = load_document_search_tool()
-        # daily_paper_tool = load_daily_paper_tool()
+        daily_paper_tool = load_daily_paper_tool()
         get_time_tool = load_get_time_tool()
         web_search_tool = load_web_search_tool()
         aio_info_tool = load_info_aio_tool()
-        return [paper_search_tool, document_search_tool, get_time_tool, web_search_tool, aio_info_tool]
+        return [
+            paper_search_tool, 
+            daily_paper_tool,
+            document_search_tool, 
+            get_time_tool, 
+            web_search_tool, 
+            aio_info_tool
+        ]
     
     def create_query_engine(self):
         """

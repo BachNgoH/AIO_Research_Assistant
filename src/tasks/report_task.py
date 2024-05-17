@@ -62,12 +62,9 @@ def generate_daily_report(paper_list):
         response = gemini_llm.complete(prompt)
         
         
-    with open(f"./outputs/daily_report_{date}.md", "w") as f:
+    with open(f"./outputs/DailyAIReports/daily_reports/daily_report_{date}.md", "w") as f:
         f.write(response.text)
-        
-    with open(f"/media/gb2t/Data/DailyAIReports/daily_reports/daily_report_{date}.md", "w") as f:
-        f.write(response.text)
-    
+            
     print("Generate Daily Report successfully!")
     send_daily_report_email(recipient_emails, markdown.markdown(response.text))
     print("Send email successfully!")
