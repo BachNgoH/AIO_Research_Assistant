@@ -11,6 +11,7 @@ from llama_index.core import Settings
 from src.tools.paper_search_tool import load_paper_search_tool, load_daily_paper_tool, load_get_time_tool
 from src.tools.document_tool import load_document_search_tool
 from src.tools.web_search_tool import load_web_search_tool
+from src.tools.summarize_tool import load_summarize_tool
 from src.tools.info_tool import load_info_aio_tool
 from src.constants import SYSTEM_PROMPT
 from starlette.responses import StreamingResponse, Response
@@ -35,13 +36,16 @@ class AssistantService:
         
     def load_tools(self):
         paper_search_tool = load_paper_search_tool()
+        paper_summarize_tool = load_summarize_tool()
         document_search_tool = load_document_search_tool()
         daily_paper_tool = load_daily_paper_tool()
         get_time_tool = load_get_time_tool()
         web_search_tool = load_web_search_tool()
         aio_info_tool = load_info_aio_tool()
+        
         return [
-            paper_search_tool, 
+            paper_search_tool,
+            paper_summarize_tool, 
             daily_paper_tool,
             document_search_tool, 
             get_time_tool, 
@@ -71,7 +75,7 @@ class AssistantService:
                 temperature=TEMPERATURE
             )
         else:
-            query_engine = OpenAIAgent.from_tools(
+            query_engine = AssistantAgent.from_tools(
                 tools=tools,
                 verbose=True,
                 llm=llm,

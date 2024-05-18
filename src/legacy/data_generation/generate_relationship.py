@@ -8,7 +8,7 @@ from tqdm import tqdm
 import json
 from datasets import load_dataset
 from utils.helper import has_citation, parse_json
-from utils.prompts import DEFAULT_CITATION_INFER_PROMPT_TEMPLATE as prompt_template
+from GemmaResearchAssistant.src.prompts import DEFAULT_CITATION_INFER_PROMPT_TEMPLATE as prompt_template
 import random
 
 from dotenv import load_dotenv, dotenv_values

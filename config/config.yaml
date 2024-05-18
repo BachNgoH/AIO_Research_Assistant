@@ -11,5 +11,8 @@ MODEL:
   # DOCUMENT_EMBEDDING_MODEL_NAME: "text-embedding-3-small"
   DOCUMENT_EMBEDDING_SERVICE: "hf" # ["hf", "ollama", openai] # default hf
 
+  AIO_INFO_EMBEDDING_MODEL_NAME: "text-embedding-3-large"
+  AIO_INFO_EMBEDDING_SERVICE: "openai"
+
   MODEL_ID: gpt-3.5-turbo
   # MODEL_ID: "llama3-70b-8192"

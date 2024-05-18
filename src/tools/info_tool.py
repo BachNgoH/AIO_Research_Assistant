@@ -4,7 +4,8 @@ import sys
 import torch
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from dotenv import load_dotenv
-from constants import EMBEDDING_SERVICE, EMBEDDING_MODEL_NAME
+from constants import AIO_INFO_EMBEDDING_SERVICE as EMBEDDING_SERVICE 
+from constants import AIO_INFO_EMBEDDING_MODEL_NAME as EMBEDDING_MODEL_NAME
 from llama_index.core.tools import FunctionTool
 from llama_index.core.schema import MetadataMode
 from llama_index.embeddings.ollama import OllamaEmbedding
@@ -53,7 +54,16 @@ def load_info_aio_tool():
         keep_retrieval_score=True,
     )
 
-    def retrieve_aio_info(query: str):
+    def retrieve_aio_course_info(query: str):
+        """
+        Retrieves information about AIO courses based on the given query.
+
+        Args:
+            query (str): The query string used to retrieve the course information.
+
+        Returns:
+            str: A formatted string containing the retrieved course information.
+        """
         retriever_response = retriever.retrieve(query)
         retriever_result = rerank_postprocessor.postprocess_nodes(
             retriever_response, query_str=query
@@ -64,6 +74,6 @@ def load_info_aio_tool():
         return "\n================\n".join(retriever_result)
 
     return FunctionTool.from_defaults(
-        retrieve_aio_info,
-        description="Useful for answering about general information of AIO course.",
+        retrieve_aio_course_info,
+        description="Useful for answering questions about information of AIO course.",
     )
