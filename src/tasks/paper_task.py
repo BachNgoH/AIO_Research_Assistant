@@ -27,7 +27,7 @@ def clean_text(x):
 
 
 def get_daily_arxiv_papers():
-    max_results = 800
+    max_results = 200
     categories = ['cs.AI', 'cs.CV', 'cs.IR', 'cs.LG', 'cs.CL']
     base_url = 'http://export.arxiv.org/api/query?'
     all_categories = [f'cat:{category}' for category in categories]
@@ -37,27 +37,36 @@ def get_daily_arxiv_papers():
     start = 0
     today = datetime.utcnow().date()
     new_papers_found = True
-    wait_time = 3
 
     while new_papers_found:
         query = f'search_query={search_query}&start={start}&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
         response = requests.get(base_url + query)
         feed = feedparser.parse(response.content)
         
+        if len(feed.entries) == 0:
+            print("NO paper")
+            break
+        
+        new_papers_found = False  # Assume no new papers found unless proven otherwise
+        
         for r in feed.entries:
             paper_date = datetime.strptime(r['published'][:10], '%Y-%m-%d').date()
-            if paper_date >= today - timedelta(1):
+            if paper_date >= today - timedelta(days=3):
                 new_papers_found = True
-                paper_list.append(Document(text=f"""
-Title: {clean_text(r['title'])}
-{r['summary']}
-                """, metadata={'paper_id': r['id'].split("/")[-1], 'title': clean_text(r['title']), 'date': r['published'][:10]}))
+                paper_list.append(Document(text=r['summary'], metadata={
+                    'paper_id': r['id'].split("/")[-1],
+                    'title': clean_text(r['title']),
+                    'summary': clean_text(r['summary']),
+                    'date': r['published'][:10]
+                }))
             else:
-                new_papers_found = False
-                break
+                break  # Stop the loop if we find a paper older than one day
+        
+        if not new_papers_found:
+            break  # Stop the outer loop if no new papers were found in this iteration
         
         start += max_results
-        time.sleep(wait_time)
+        time.sleep(1)  # Reduced sleep time to 1 second to improve performance
 
     return paper_list
 
@@ -90,6 +99,11 @@ def ingest_paper(arxiv_documents):
 def daily_ingest_analyze():
     print("Getting papers.")
     arxiv_documents = get_daily_arxiv_papers()
+    
+    if len(arxiv_documents) == 0:
+        print("No new papers found.")
+        return
+    
     print(f"Load paper successfully, found {len(arxiv_documents)} papers.")
     
     ingest_paper(arxiv_documents)
