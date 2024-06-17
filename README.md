@@ -3,9 +3,6 @@
 
 
 ## Main workflow
-
-<img src="./figures/RAG-overview.jpg" alt="pipeline" width=800/>
-
 <!-- 
 ### Training the citation annotate model
 
