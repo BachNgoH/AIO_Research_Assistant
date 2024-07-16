@@ -1,4 +1,3 @@
-# AIO Research Assistant
 <!-- <img src="./figures/GemmaAIO-main-image.webp" alt="main-image"/> -->
 
 
